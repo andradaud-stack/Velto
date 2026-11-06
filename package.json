@@ -10,10 +10,13 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",
+    "@tidbcloud/serverless": "^0.3.0",
     "canvas-confetti": "^1.9.4",
     "clsx": "^2.1.1",
     "dexie": "^4.0.11",
     "dexie-react-hooks": "^1.1.7",
+    "google-auth-library": "^11.3.3",
+    "jsonwebtoken": "^9.0.3",
     "jspdf": "^2.5.2",
     "jspdf-autotable": "^3.8.4",
     "lucide-react": "^1.16.0",
