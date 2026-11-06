@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-29T13:44:00.000Z",
+  "title": "Design System: Velto",
+  "extensions": {
+    "colorMeta": {
+      "primary": { "role": "primary", "displayName": "Royal Violet", "canonical": "#7C4DFF" },
+      "primary-dark": { "role": "primary", "displayName": "Deep Violet", "canonical": "#6633EE" },
+      "canvas": { "role": "neutral", "displayName": "Soft Lavender Canvas", "canonical": "#F4F2FA" },
+      "surface": { "role": "neutral", "displayName": "Clean White Surface", "canonical": "#FFFFFF" },
+      "neutral-heading": { "role": "neutral", "displayName": "Deep Slate", "canonical": "#1E1B2E" },
+      "neutral-body": { "role": "neutral", "displayName": "Body Slate", "canonical": "#595574" },
+      "gain": { "role": "tertiary", "displayName": "Financial Gain", "canonical": "#10B981" },
+      "loss": { "role": "error", "displayName": "Financial Loss", "canonical": "#EF4444" },
+      "warning": { "role": "warning", "displayName": "Amber Warning", "canonical": "#F59E0B" },
+      "gold": { "role": "secondary", "displayName": "Treasury Gold", "canonical": "#EAB308" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display Extrabold", "purpose": "Net worth and primary metrics" },
+      "headline": { "displayName": "Headline Bold", "purpose": "Page and hero card headings" },
+      "title": { "displayName": "Title Bold", "purpose": "Section titles and modal headers" },
+      "body": { "displayName": "Body Regular", "purpose": "Descriptions and form values" },
+      "label": { "displayName": "Label Semibold", "purpose": "Badges and metadata" }
+    },
+    "shadows": [
+      { "name": "soft-card", "value": "0 4px 20px -2px rgba(124, 77, 255, 0.06), 0 2px 6px -1px rgba(0, 0, 0, 0.04)", "purpose": "Default floating card elevation" },
+      { "name": "hero-card", "value": "0 12px 32px -4px rgba(124, 77, 255, 0.35)", "purpose": "Bank Jago debit card glow elevation" },
+      { "name": "bottom-bar", "value": "0 -4px 24px rgba(0, 0, 0, 0.08)", "purpose": "Floating navigation bar elevation" }
+    ],
+    "motion": [
+      { "name": "ease-standard", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Default transition for card and modal states" }
+    ],
+    "breakpoints": [
+      { "name": "mobile", "value": "420px" },
+      { "name": "tablet", "value": "768px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Action Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Primary interactive trigger for high-intent actions.",
+      "html": "<button class=\"velto-btn-primary\">Simpan Transaksi</button>",
+      "css": ".velto-btn-primary { background: #6633EE; color: #FFFFFF; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 14px; padding: 12px 20px; border: none; border-radius: 16px; box-shadow: 0 4px 14px rgba(102, 51, 238, 0.3); cursor: pointer; transition: background 0.2s, transform 0.15s; } .velto-btn-primary:hover { background: #5727D8; transform: translateY(-1px); }"
+    },
+    {
+      "name": "Surface Asset Card",
+      "kind": "card",
+      "refersTo": "card-surface",
+      "description": "Standard modular card container for wallets and assets.",
+      "html": "<div class=\"velto-card\"><div class=\"velto-card-title\">Dompet Cash</div><div class=\"velto-card-val\">Rp 50.000</div></div>",
+      "css": ".velto-card { background: #FFFFFF; border: 1px solid #ECE8F6; border-radius: 24px; padding: 16px; box-shadow: 0 4px 20px -2px rgba(124, 77, 255, 0.06); font-family: 'Plus Jakarta Sans', sans-serif; } .velto-card-title { font-size: 12px; color: #7E7A9B; font-weight: 600; } .velto-card-val { font-size: 18px; color: #1E1B2E; font-weight: 800; margin-top: 4px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Modern Soft Lavender Fintech OS with modular cards, precision financial typography, and real-time asset parity.",
+    "overview": "Velto menghadirkan estetika Modern Fintech (EasyPay Soft Lavender) yang menggabungkan kemewahan violet royal dengan kanvas lembut lavender. Visual dirancang mobile-first, memprioritaskan keterbacaan angka finansial yang tajam, hierarki kartu aset yang modular, serta interaksi mikro yang presisi dan percaya diri.",
+    "keyCharacteristics": [
+      "Soft Lavender Canvas (#F4F2FA) for calm, strain-free viewing",
+      "Royal Violet primary accents (#7C4DFF and #6633EE)",
+      "High-contrast slate text (#1E1B2E and #595574) exceeding WCAG AA standards",
+      "Clean 1px borders (#ECE8F6) avoiding crude side-tabs or dark skeuomorphic dropshadows"
+    ],
+    "rules": [
+      { "name": "The Tonal Harmony Rule", "body": "Never use pure white backgrounds for pages; reserve white exclusively for elevated surface cards.", "section": "colors" },
+      { "name": "The Financial Contrast Floor", "body": "Every currency amount and interactive button text must maintain at least 4.5:1 contrast against its background.", "section": "typography" }
+    ],
+    "dos": [
+      "Do use soft lavender canvas and clean white surface cards with 1px border #ECE8F6.",
+      "Do provide privacy eye masking (Rp ••••••••) on all net worth displays.",
+      "Do maintain interactive text sizes at or above 11px."
+    ],
+    "donts": [
+      "Don't use thick side-tab borders (border-l-4) on rounded cards.",
+      "Don't use tacky bounce easing (animate-bounce); use smooth transitions.",
+      "Don't mix unverified business profit into personal net worth without separation."
+    ]
+  }
+}
