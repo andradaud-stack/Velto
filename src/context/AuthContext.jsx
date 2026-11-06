@@ -2,13 +2,13 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { 
   supabase, 
   isSupabaseConfigured, 
-  signInWithGoogle, 
   signInWithEmailPassword, 
   signUpWithEmailPassword, 
   signOutCloud 
 } from '../data/db/supabaseClient';
 import { prefsHelper } from '../data/db/prefsHelper';
 import { notificationService } from '../data/services/notificationService';
+import { cloudSyncService } from '../data/services/cloudSyncService';
 
 const AuthContext = createContext(null);
 
@@ -24,78 +24,53 @@ export function AuthProvider({ children }) {
 
     async function initAuth() {
       try {
-        if (isSupabaseConfigured) {
+        // 1. Cek sesi cloud TiDB / JWT lokal terlebih dahulu
+        const token = cloudSyncService.getToken();
+        const savedSession = localStorage.getItem('velto_cloud_session');
+
+        if (savedSession) {
+          try {
+            const parsed = JSON.parse(savedSession);
+            if (mounted && parsed?.user) {
+              setUser(parsed.user);
+              setIsCloudAuthenticated(true);
+              setSyncStatus('synced');
+              // Lakukan background pull dari TiDB
+              if (token) {
+                cloudSyncService.pullFromCloud().catch(console.warn);
+              }
+            }
+          } catch (e) {
+            console.warn('[Session parse error]', e);
+          }
+        } else if (isSupabaseConfigured) {
           const { data: { session } } = await supabase.auth.getSession();
           if (mounted && session?.user) {
             setUser(session.user);
             setIsCloudAuthenticated(true);
             setSyncStatus('synced');
           }
+        }
 
-          const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-            if (mounted) {
-              if (session?.user) {
-                setUser(session.user);
-                setIsCloudAuthenticated(true);
-                setSyncStatus('synced');
-              } else {
-                setUser(null);
-                setIsCloudAuthenticated(false);
-                setSyncStatus('offline');
-              }
-            }
-          });
-
-          return () => subscription.unsubscribe();
-        } else {
-          // Check local offline cloud session
-          const savedSession = localStorage.getItem('velto_cloud_session');
-          if (savedSession) {
-            try {
-              const parsed = JSON.parse(savedSession);
-              if (mounted && parsed?.user) {
-                if (parsed.user.user_metadata?.full_name === 'Andra Syahdan') {
-                  parsed.user.user_metadata.full_name = 'Andra Syahdan Daud';
-                  localStorage.setItem('velto_cloud_session', JSON.stringify(parsed));
-                }
-                setUser(parsed.user);
-                setIsCloudAuthenticated(true);
-                setSyncStatus('offline');
-              }
-            } catch {
-              // ignore
-            }
-          }
+        // Cek PIN / biometric lock status
+        const pinEnabled = await prefsHelper.isPinEnabled();
+        const biometricEnabled = await prefsHelper.isBiometricEnabled();
+        if (mounted) {
+          setIsLocalLocked(pinEnabled || biometricEnabled);
         }
       } catch (err) {
-        console.warn('[AuthContext] Auth init error:', err);
+        console.error('Failed to initialize auth state:', err);
       } finally {
         if (mounted) setIsLoadingAuth(false);
       }
     }
 
     initAuth();
-    return () => { mounted = false; };
-  }, []);
 
-  const loginWithEmail = async (email, password) => {
-    try {
-      const res = await signInWithEmailPassword(email, password);
-      if (res.error) {
-        notificationService.error(res.error.message || 'Login gagal', 'Autentikasi Gagal');
-        return res;
-      }
-      if (res.data?.user) {
-        setUser(res.data.user);
-        setIsCloudAuthenticated(true);
-        notificationService.success(`Selamat datang kembali, ${res.data.user.user_metadata?.full_name || res.data.user.email}!`, 'Login Berhasil');
-      }
-      return res;
-    } catch (err) {
-      notificationService.error(err.message, 'Gagal Login');
-      return { error: err };
-    }
-  };
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const registerWithEmail = async (email, password, fullName) => {
     try {
@@ -116,23 +91,119 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const loginWithGoogle = async () => {
+  const loginWithEmail = async (email, password) => {
     try {
-      const res = await signInWithGoogle();
+      const res = await signInWithEmailPassword(email, password);
+      if (res.error) {
+        notificationService.error(res.error.message || 'Email atau password salah', 'Gagal Masuk');
+        return res;
+      }
       if (res.data?.user) {
         setUser(res.data.user);
         setIsCloudAuthenticated(true);
-        notificationService.success('Login Google Berhasil!', 'Cloud Connected');
+        notificationService.success(`Selamat datang kembali!`, 'Login Berhasil');
       }
       return res;
     } catch (err) {
-      notificationService.error(err.message, 'Gagal Login Google');
+      notificationService.error(err.message, 'Gagal Masuk');
       return { error: err };
     }
   };
 
+  /**
+   * Login Google Resmi via Google Identity Services & TiDB Cloud Backend
+   */
+  const loginWithGoogle = async () => {
+    try {
+      // 1. Ambil Google Client ID
+      let clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+      if (!clientId || clientId.includes('undefined')) {
+        try {
+          const cfgRes = await fetch('/api/auth/config');
+          if (cfgRes.ok) {
+            const cfg = await cfgRes.json();
+            clientId = cfg.clientId;
+          }
+        } catch (e) {
+          // fallback
+        }
+      }
+
+      if (!clientId) {
+        clientId = '104560933562-fq59domirr6lj1dee565l92d7a7ib86b.apps.googleusercontent.com';
+      }
+
+      // 2. Tunggu SDK Google siap
+      if (!window.google?.accounts?.oauth2) {
+        await new Promise(r => setTimeout(r, 600));
+      }
+
+      if (!window.google?.accounts?.oauth2) {
+        throw new Error('Google Identity Services SDK belum siap dimuat di browser.');
+      }
+
+      // 3. Buka Google OAuth Popup resmi
+      const googleToken = await new Promise((resolve, reject) => {
+        try {
+          const tokenClient = window.google.accounts.oauth2.initTokenClient({
+            client_id: clientId,
+            scope: 'email profile openid',
+            callback: (resp) => {
+              if (resp.error) {
+                reject(new Error(resp.error_description || resp.error));
+              } else if (resp.access_token) {
+                resolve(resp.access_token);
+              } else {
+                reject(new Error('Gagal mendapatkan token dari Google.'));
+              }
+            },
+            error_callback: (err) => {
+              reject(new Error(err.message || 'Popup Google ditutup oleh pengguna.'));
+            }
+          });
+          tokenClient.requestAccessToken({ prompt: 'select_account' });
+        } catch (sdkErr) {
+          reject(sdkErr);
+        }
+      });
+
+      // 4. Verifikasi ke backend TiDB Cloud
+      const authRes = await fetch('/api/auth/google', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accessToken: googleToken })
+      });
+
+      if (!authRes.ok) {
+        const errJson = await authRes.json().catch(() => ({}));
+        throw new Error(errJson.error || 'Autentikasi gagal pada server TiDB.');
+      }
+
+      const authData = await authRes.json();
+      if (!authData.success || !authData.user) {
+        throw new Error(authData.error || 'Gagal login Google');
+      }
+
+      // 5. Simpan token & user
+      cloudSyncService.setToken(authData.token);
+      localStorage.setItem('velto_cloud_session', JSON.stringify({ user: authData.user, token: authData.token }));
+      setUser(authData.user);
+      setIsCloudAuthenticated(true);
+      setSyncStatus('synced');
+
+      // 6. Tarik data dari TiDB ke Dexie
+      await cloudSyncService.pullFromCloud();
+
+      notificationService.success(`Selamat datang, ${authData.user.name}!`, 'Login Google Berhasil');
+      return { data: { user: authData.user }, error: null };
+    } catch (err) {
+      console.error('[Google Auth Error]', err);
+      notificationService.error(err.message || 'Gagal Login Google', 'Error Autentikasi');
+      return { data: null, error: err };
+    }
+  };
+
   const loginOfflineDirect = () => {
-    // Mode offline-first tanpa akun cloud
     const offlineUser = {
       id: 'local_andra',
       email: 'andra@velto.finance',
@@ -147,10 +218,15 @@ export function AuthProvider({ children }) {
   };
 
   const logout = async () => {
-    await signOutCloud();
+    cloudSyncService.setToken(null);
+    localStorage.removeItem('velto_cloud_session');
     setUser(null);
     setIsCloudAuthenticated(false);
     setIsLocalLocked(true);
+    setSyncStatus('offline');
+    if (isSupabaseConfigured) {
+      await signOutCloud().catch(() => {});
+    }
     notificationService.info('Anda telah keluar.', 'Logout Selesai');
   };
 

@@ -2,38 +2,53 @@ import { OAuth2Client } from 'google-auth-library';
 import jwt from 'jsonwebtoken';
 import { getDb } from '../_db.js';
 
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID);
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID || '104560933562-fq59domirr6lj1dee565l92d7a7ib86b.apps.googleusercontent.com';
 const OWNER_EMAIL = (process.env.OWNER_EMAIL || 'andrasyahdand@gmail.com').toLowerCase();
-const JWT_SECRET = process.env.JWT_SECRET || 'velto_super_secret_jwt_key_2026';
+const JWT_SECRET = process.env.JWT_SECRET || 'velto_super_secure_jwt_secret_key_2026';
+
+const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { idToken } = req.body;
-  if (!idToken) {
-    return res.status(400).json({ error: 'Missing idToken' });
+  const { idToken, accessToken } = req.body || {};
+  if (!idToken && !accessToken) {
+    return res.status(400).json({ error: 'Missing idToken or accessToken' });
   }
 
   try {
-    const db = getDb();
+    let payload = null;
 
-    // Verify token with Google
-    let payload;
-    try {
-      const ticket = await client.verifyIdToken({
-        idToken,
-        audience: process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID
+    if (accessToken) {
+      // Verify via Google UserInfo endpoint
+      const userRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { Authorization: `Bearer ${accessToken}` }
       });
-      payload = ticket.getPayload();
-    } catch (tokenErr) {
-      // Fallback verification via Google API endpoint if audience check differs
-      const verifyRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`);
-      if (!verifyRes.ok) {
-        throw new Error('Google token verification failed');
+      if (!userRes.ok) {
+        throw new Error('Failed to fetch userinfo with access token');
       }
-      payload = await verifyRes.json();
+      payload = await userRes.json();
+    } else if (idToken) {
+      // Verify token with Google Library or tokeninfo
+      try {
+        const ticket = await client.verifyIdToken({
+          idToken,
+          audience: GOOGLE_CLIENT_ID
+        });
+        payload = ticket.getPayload();
+      } catch (tokenErr) {
+        const verifyRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`);
+        if (!verifyRes.ok) {
+          throw new Error('Google token verification failed');
+        }
+        payload = await verifyRes.json();
+      }
+    }
+
+    if (!payload || !payload.email) {
+      throw new Error('Invalid user payload from Google');
     }
 
     const email = payload.email.toLowerCase();
@@ -42,7 +57,9 @@ export default async function handler(req, res) {
     const isOwner = email === OWNER_EMAIL;
     const userId = isOwner ? 'owner_andra' : `user_${payload.sub}`;
 
-    // Upsert user in TiDB
+    const db = getDb();
+
+    // 1. Upsert user record in TiDB
     await db.execute(`
       INSERT INTO users (id, email, name, avatar_url, role)
       VALUES (?, ?, ?, ?, ?)
@@ -53,7 +70,8 @@ export default async function handler(req, res) {
         updated_at = CURRENT_TIMESTAMP
     `, [userId, email, isOwner ? 'Andra Syahdan Daud' : name, avatarUrl, isOwner ? 'owner' : 'user']);
 
-    // If OWNER and wallets are not seeded yet, seed owner's exact initial wallets
+    // 2. Multi-tenancy Isolation:
+    // If OWNER: Bind/Seed complete pre-existing wallets and settings
     if (isOwner) {
       const existingWallets = await db.execute(`
         SELECT COUNT(*) as count FROM wallets WHERE user_id = ?
@@ -89,11 +107,10 @@ export default async function handler(req, res) {
         `, [userId, userId]);
       }
     } else {
-      // Normal / Other users: They get a clean, fresh, empty state
-      // (No pre-existing wallets, no transactions, 0 balance)
+      // Normal / Other users: They get a clean, fresh, empty state (0 balance, 0 transactions, 0 goals)
     }
 
-    // Generate JWT token
+    // 3. Issue secure JWT token
     const token = jwt.sign(
       {
         id: userId,
