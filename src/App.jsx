@@ -36,7 +36,7 @@ import { ShieldCheck, LogOut } from 'lucide-react';
 import { formatRupiah } from './core/utils/currencyFormatter';
 
 function AppContent() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { user, isCloudAuthenticated, isLoadingAuth, logout } = useAuth();
   const [currentTab, setCurrentTab] = useState('overview');
   const [selectedWallet, setSelectedWallet] = useState(null);
 
@@ -78,8 +78,10 @@ function AppContent() {
     setSelectedWallet(wallet);
   };
 
-  const handleLogout = () => {
-    setIsAuthenticated(false);
+  const handleLogout = async () => {
+    if (window.confirm('Apakah Anda yakin ingin keluar dari akun ini?')) {
+      await logout();
+    }
   };
 
   const liveSelectedWallet = selectedWallet ? walletMap[selectedWallet.id] || selectedWallet : null;
@@ -99,13 +101,24 @@ function AppContent() {
     topBarTitle = 'Setelan Velto';
   }
 
-  if (!isAuthenticated) {
+  // Loading state while verifying auth session
+  if (isLoadingAuth) {
+    return (
+      <div className="min-h-screen bg-[#F0F4FC] flex flex-col items-center justify-center select-none font-sans">
+        <div className="w-12 h-12 rounded-2xl bg-[#6633EE] flex items-center justify-center shadow-lg animate-pulse mb-3">
+          <span className="text-white font-black text-xl">V</span>
+        </div>
+        <p className="text-xs font-bold text-[#7E7A9B] animate-pulse">Memuat Velto Finance...</p>
+      </div>
+    );
+  }
+
+  // Show login only if not authenticated
+  if (!user && !isCloudAuthenticated) {
     return (
       <>
         <ToastBanner />
-        <LoginPage 
-          onLoginSuccess={() => setIsAuthenticated(true)} 
-        />
+        <LoginPage onLoginSuccess={() => {}} />
       </>
     );
   }
@@ -124,7 +137,8 @@ function AppContent() {
             setSelectedWallet(null);
             setCurrentTab(tab);
           }} 
-          onResetSeed={handleResetSeed} 
+          onResetSeed={handleResetSeed}
+          onLogout={handleLogout} 
         />
 
         {/* Content View Container */}

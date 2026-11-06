@@ -9,11 +9,12 @@ import {
   TrendingUp,
   Sparkles,
   HelpCircle,
-  Package
+  Package,
+  LogOut
 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 
-export default function SidebarNav({ currentTab, setTab, onResetSeed }) {
+export default function SidebarNav({ currentTab, setTab, onResetSeed, onLogout }) {
   const { wallets } = useFinance();
 
   const mainMenuItems = [
@@ -99,6 +100,17 @@ export default function SidebarNav({ currentTab, setTab, onResetSeed }) {
                 </button>
               );
             })}
+
+            {/* Logout button in sidebar */}
+            {onLogout && (
+              <button
+                onClick={onLogout}
+                className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-bold text-rose-500 hover:text-rose-600 hover:bg-rose-50 transition-all cursor-pointer mt-2"
+              >
+                <LogOut className="w-4 h-4 stroke-[2.2] text-rose-500" />
+                <span>Keluar Akun</span>
+              </button>
+            )}
           </nav>
         </div>
       </div>

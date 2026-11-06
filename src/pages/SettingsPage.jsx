@@ -7,14 +7,15 @@ import ProfileModal from '../components/modals/ProfileModal';
 import { 
   CheckCircle, 
   Fingerprint, 
-  Edit3
+  Edit3,
+  LogOut
 } from 'lucide-react';
 import { biometricService } from '../data/services/biometricService';
 import { prefsHelper } from '../data/db/prefsHelper';
 import { notificationService } from '../data/services/notificationService';
 
 export default function SettingsPage() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [profileName, setProfileName] = useState('Velto User');
   const [profilePhoto, setProfilePhoto] = useState(null);
@@ -170,6 +171,29 @@ export default function SettingsPage() {
 
       {/* Real-Time WhatsApp Bot Notification */}
       <WhatsAppNotificationCard />
+
+      {/* Logout Card */}
+      <div className="p-5 rounded-3xl bg-white border border-rose-100 shadow-soft-card">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h4 className="text-sm font-bold text-[#1E1B2E]">Keluar dari Akun</h4>
+            <p className="text-[11px] text-[#7E7A9B] mt-0.5">
+              Keluar dari sesi akun saat ini dan kembali ke halaman login.
+            </p>
+          </div>
+          <button
+            onClick={async () => {
+              if (window.confirm('Apakah Anda yakin ingin keluar dari akun ini?')) {
+                await logout();
+              }
+            }}
+            className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold text-xs transition-all active:scale-95 border border-rose-200 cursor-pointer self-start sm:self-auto"
+          >
+            <LogOut className="w-4 h-4 stroke-[2.2]" />
+            <span>Keluar Akun</span>
+          </button>
+        </div>
+      </div>
 
       {/* App Footer info */}
       <div className="text-center text-[11px] text-[#7E7A9B] pt-2">

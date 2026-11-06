@@ -133,13 +133,34 @@ export function AuthProvider({ children }) {
         clientId = '104560933562-fq59domirr6lj1dee565l92d7a7ib86b.apps.googleusercontent.com';
       }
 
-      // 2. Tunggu SDK Google siap
-      if (!window.google?.accounts?.oauth2) {
-        await new Promise(r => setTimeout(r, 600));
+      // 2. Tunggu SDK Google siap dimuat (hingga 4 detik)
+      let googleSdkReady = Boolean(window.google?.accounts?.oauth2);
+      if (!googleSdkReady) {
+        for (let i = 0; i < 20; i++) {
+          await new Promise(r => setTimeout(r, 200));
+          if (window.google?.accounts?.oauth2) {
+            googleSdkReady = true;
+            break;
+          }
+        }
+      }
+
+      // Jika script belum ada, inject dinamis
+      if (!googleSdkReady && !window.google?.accounts?.oauth2) {
+        await new Promise((resolve) => {
+          const s = document.createElement('script');
+          s.src = 'https://accounts.google.com/gsi/client';
+          s.async = true;
+          s.defer = true;
+          s.onload = () => resolve(true);
+          s.onerror = () => resolve(false);
+          document.head.appendChild(s);
+          setTimeout(() => resolve(false), 3000);
+        });
       }
 
       if (!window.google?.accounts?.oauth2) {
-        throw new Error('Google Identity Services SDK belum siap dimuat di browser.');
+        throw new Error('Google Sign-In SDK belum siap atau terhalang browser (misal Brave Shields). Silakan nonaktifkan shield/adblocker sementara lalu coba lagi.');
       }
 
       // 3. Buka Google OAuth Popup resmi
