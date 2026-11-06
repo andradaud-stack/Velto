@@ -5,6 +5,7 @@ import { notificationService } from '../data/services/notificationService';
 import { fetchLiveGoldPrice } from '../data/services/goldPriceService';
 import { googleSheetService } from '../data/services/googleSheetService';
 import { waNotificationService } from '../data/services/waNotificationService';
+import { cloudSyncService } from '../data/services/cloudSyncService';
 import { INITIAL_WALLETS, INITIAL_GOAL, INITIAL_TRANSACTIONS } from '../core/constants/initialData';
 import { useAuth } from './AuthContext';
 import { isAndraUser, getUserScopeId } from '../core/utils/userScope';
@@ -101,6 +102,11 @@ export function FinanceProvider({ children }) {
     initializeDatabase().then(() => {
       if (mounted) setIsDbReady(true);
     });
+
+    // Start Real-Time Cloud Sync across devices
+    if (user?.id) {
+      cloudSyncService.startAutoSync();
+    }
 
     const updateGoldRate = async () => {
       try {

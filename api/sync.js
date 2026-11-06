@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { getDb } from './_db.js';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'velto_super_secret_jwt_key_2026';
+const JWT_SECRET = process.env.JWT_SECRET || 'velto_super_secure_jwt_secret_key_2026';
 
 function authenticateRequest(req) {
   const authHeader = req.headers.authorization;
@@ -129,7 +129,67 @@ export default async function handler(req, res) {
 
     // POST: Save or batch sync mutations
     if (req.method === 'POST') {
-      const { type, action, item } = req.body;
+      const { type, action, item, items } = req.body;
+
+      // Batch Sync (Full push from active device)
+      if (action === 'batch_sync' && items) {
+        const { wallets = [], transactions = [], goals = [] } = items;
+
+        for (const w of wallets) {
+          await db.execute(`
+            INSERT INTO wallets (id, user_id, name, type, balance, invested_capital, gold_grams, photo_url, color)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE
+              name = VALUES(name),
+              type = VALUES(type),
+              balance = VALUES(balance),
+              invested_capital = VALUES(invested_capital),
+              gold_grams = VALUES(gold_grams),
+              photo_url = VALUES(photo_url),
+              color = VALUES(color),
+              updated_at = CURRENT_TIMESTAMP
+          `, [
+            w.id,
+            userId,
+            w.name,
+            w.type || 'bank',
+            w.balance || 0,
+            w.investedCapital || 0,
+            w.goldGrams || 0,
+            w.photoUrl || null,
+            w.color || null
+          ]);
+        }
+
+        for (const t of transactions) {
+          await db.execute(`
+            INSERT INTO transactions (id, user_id, title, amount, type, category, wallet_id, destination_wallet_id, details, date)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE
+              title = VALUES(title),
+              amount = VALUES(amount),
+              type = VALUES(type),
+              category = VALUES(category),
+              wallet_id = VALUES(wallet_id),
+              destination_wallet_id = VALUES(destination_wallet_id),
+              details = VALUES(details),
+              date = VALUES(date)
+          `, [
+            t.id,
+            userId,
+            t.title,
+            t.amount || 0,
+            t.type,
+            t.category || null,
+            t.walletId || null,
+            t.destinationWalletId || null,
+            t.details || null,
+            t.date || new Date().toISOString()
+          ]);
+        }
+
+        return res.status(200).json({ success: true, message: 'Batch synced' });
+      }
 
       if (type === 'wallet') {
         if (action === 'save' || action === 'update') {
