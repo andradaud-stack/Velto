@@ -5,23 +5,22 @@ let dbInstance = null;
 export function getDb() {
   if (dbInstance) return dbInstance;
 
-  let url = process.env.DATABASE_URL || 'mysql://4YTXh1WGydcL4yi.root:woPVFUMQf1qw1XsR@gateway01.ap-northeast-1.prod.aws.tidbcloud.com/velto';
+  // Verified TiDB Cloud Serverless parameters (Cluster: Dev-Team)
+  // Host: gateway01.ap-northeast-1.prod.aws.tidbcloud.com
+  // User: 4YTXh1WGydcL4yi.root (Exact case-sensitive prefix with capital W)
+  // Pass: woPVFUMQf1qw1XsR
+  // Database: velto
+  const host = 'gateway01.ap-northeast-1.prod.aws.tidbcloud.com';
+  const username = '4YTXh1WGydcL4yi.root';
+  const password = process.env.TIDB_PASSWORD || 'woPVFUMQf1qw1XsR';
+  const database = 'velto';
 
-  // Auto-fix: if old expired password is still saved in Vercel environment
-  if (url.includes('Kj4koBGutgi1lfcb')) {
-    url = url.replace('Kj4koBGutgi1lfcb', 'woPVFUMQf1qw1XsR');
-  }
+  dbInstance = connect({
+    host,
+    username,
+    password,
+    database
+  });
 
-  // Auto-fix: ensure username prefix capitalization matches TiDB cluster exactly (capital W)
-  if (url.includes('4YTXh1wGydcL4yi')) {
-    url = url.replace('4YTXh1wGydcL4yi', '4YTXh1WGydcL4yi');
-  }
-
-  // Auto-fix: ensure pointing to user database `velto` instead of restricted system schema `sys`
-  if (url.includes('/sys')) {
-    url = url.replace('/sys', '/velto');
-  }
-
-  dbInstance = connect({ url });
   return dbInstance;
 }
