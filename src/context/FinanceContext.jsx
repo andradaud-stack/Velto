@@ -37,12 +37,12 @@ export function FinanceProvider({ children }) {
   const isOwner = useMemo(() => isAndraUser(user), [user]);
   const activeUserId = useMemo(() => getUserScopeId(user), [user]);
 
-  // Dexie live queries (scoped to active user: new users start completely at 0)
+  // Dexie live queries (scoped to active user: handles both owner 'andra' / 'owner_andra' and multi-tenant)
   const wallets = useLiveQuery(async () => {
     if (!db.wallets) return [];
     const all = await db.wallets.toArray();
     if (isOwner) {
-      return all.filter(w => !w.userId || w.userId === 'andra');
+      return all.filter(w => !w.userId || w.userId === 'andra' || w.userId === 'owner_andra');
     }
     return all.filter(w => w.userId === activeUserId);
   }, [user?.id, user?.email, isOwner, activeUserId], []);
@@ -51,7 +51,7 @@ export function FinanceProvider({ children }) {
     if (!db.transactions) return [];
     const all = await db.transactions.reverse().sortBy('date');
     if (isOwner) {
-      return all.filter(t => !t.userId || t.userId === 'andra');
+      return all.filter(t => !t.userId || t.userId === 'andra' || t.userId === 'owner_andra');
     }
     return all.filter(t => t.userId === activeUserId);
   }, [user?.id, user?.email, isOwner, activeUserId], []);
@@ -60,7 +60,7 @@ export function FinanceProvider({ children }) {
     if (!db.goals) return [];
     const all = await db.goals.toArray();
     if (isOwner) {
-      return all.filter(g => !g.userId || g.userId === 'andra');
+      return all.filter(g => !g.userId || g.userId === 'andra' || g.userId === 'owner_andra');
     }
     return all.filter(g => g.userId === activeUserId);
   }, [user?.id, user?.email, isOwner, activeUserId], []);
@@ -73,7 +73,7 @@ export function FinanceProvider({ children }) {
       if (!db.parfumBatches) return [];
       const all = await db.parfumBatches.toArray();
       if (isOwner) {
-        return all.filter(p => !p.userId || p.userId === 'andra');
+        return all.filter(p => !p.userId || p.userId === 'andra' || p.userId === 'owner_andra');
       }
       return all.filter(p => p.userId === activeUserId);
     } catch (e) {
@@ -87,7 +87,7 @@ export function FinanceProvider({ children }) {
       if (!db.parfumSales) return [];
       const list = await db.parfumSales.toArray();
       const filtered = isOwner 
-        ? list.filter(s => !s.userId || s.userId === 'andra')
+        ? list.filter(s => !s.userId || s.userId === 'andra' || s.userId === 'owner_andra')
         : list.filter(s => s.userId === activeUserId);
       return filtered.sort((a, b) => new Date(b.dateSold || b.createdAt || 0) - new Date(a.dateSold || a.createdAt || 0));
     } catch (e) {
@@ -429,6 +429,7 @@ export function FinanceProvider({ children }) {
         }
       });
 
+      cloudSyncService.syncLocalToCloud().catch(() => {});
       notificationService.success(`Kantong baru "${name}" berhasil dibuat!`, 'Kantong Ditambahkan');
       return { success: true, id };
     } catch (err) {
@@ -452,6 +453,7 @@ export function FinanceProvider({ children }) {
       }
 
       await db.wallets.update(walletId, payload);
+      cloudSyncService.syncLocalToCloud().catch(() => {});
       notificationService.success(`Kantong "${updateData.name || wallet.name}" berhasil diperbarui!`, 'Tersimpan');
       return { success: true };
     } catch (err) {
@@ -487,6 +489,7 @@ export function FinanceProvider({ children }) {
         }
       });
 
+      cloudSyncService.syncLocalToCloud().catch(() => {});
       notificationService.success(`Kantong "${wallet.name}" berhasil dihapus.`, 'Kantong Dihapus');
       return { success: true };
     } catch (err) {
@@ -573,6 +576,7 @@ export function FinanceProvider({ children }) {
         category: targetWalletId === 'emas' ? 'Tabungan Emas' : 'Transfer'
       });
 
+      cloudSyncService.syncLocalToCloud().catch(() => {});
       notificationService.success(
         targetWalletId === 'emas' 
           ? `Berhasil beli emas Rp ${new Intl.NumberFormat('id-ID').format(numAmount)}! Saldo DANA berkurang & gram emas bertambah.`
@@ -649,6 +653,7 @@ export function FinanceProvider({ children }) {
         category
       });
 
+      cloudSyncService.syncLocalToCloud().catch(() => {});
       notificationService.success('Transaksi berhasil dicatat!', 'Sukses');
       return { success: true };
     } catch (error) {

@@ -141,13 +141,15 @@ class CloudSyncService {
   startAutoSync() {
     if (this.autoSyncTimer) return;
 
-    // Pull immediately on start
-    this.pullFromCloud();
+    // Push local state first so any pending changes on this device reach TiDB, then pull
+    this.syncLocalToCloud().finally(() => {
+      this.pullFromCloud();
+    });
 
-    // Poll every 12 seconds
+    // Poll every 10 seconds for instant cross-device updates
     this.autoSyncTimer = setInterval(() => {
       this.pullFromCloud();
-    }, 12000);
+    }, 10000);
 
     // Pull immediately whenever user switches back to this tab / unlocks phone
     if (typeof window !== 'undefined') {

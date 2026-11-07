@@ -7,10 +7,13 @@ export function isAndraUser(user) {
   if (!user) return false;
   const email = (user.email || '').toLowerCase().trim();
   const id = (user.id || '').toLowerCase().trim();
-  const name = (user.user_metadata?.full_name || '').toLowerCase().trim();
+  const name = (user.user_metadata?.full_name || user.name || '').toLowerCase().trim();
 
   return (
     id === 'local_andra' ||
+    id === 'owner_andra' ||
+    id === 'andra' ||
+    email === 'andrasyahdand@gmail.com' ||
     email.includes('andra') ||
     email === 'andra@velto.finance' ||
     name.includes('andra')
@@ -19,7 +22,7 @@ export function isAndraUser(user) {
 
 export function getUserScopeId(user) {
   if (isAndraUser(user)) {
-    return 'andra';
+    return 'owner_andra';
   }
   return user?.id || user?.email || 'new_user';
 }
