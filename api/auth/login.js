@@ -39,7 +39,11 @@ export default async function handler(req, res) {
         SELECT COUNT(*) as count FROM wallets WHERE user_id = ?
       `, [userId]);
 
-      const count = Number(existingWallets.rows?.[0]?.count || 0);
+      const count = Number(
+        Array.isArray(existingWallets)
+          ? existingWallets[0]?.count
+          : (existingWallets?.rows?.[0]?.count || 0)
+      );
 
       if (count === 0) {
         const ownerWallets = [
@@ -56,6 +60,10 @@ export default async function handler(req, res) {
           await db.execute(`
             INSERT INTO wallets (id, user_id, name, type, balance, invested_capital, gold_grams, photo_url, color)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE
+              name = VALUES(name),
+              type = VALUES(type),
+              balance = VALUES(balance)
           `, w);
         }
 

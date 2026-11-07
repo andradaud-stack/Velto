@@ -45,7 +45,9 @@ export default async function handler(req, res) {
         db.execute('SELECT * FROM settings WHERE user_id = ?', [userId])
       ]);
 
-      const formattedWallets = (walletsRes.rows || []).map(w => ({
+      const getRows = (r) => (Array.isArray(r) ? r : (r?.rows || []));
+
+      const formattedWallets = getRows(walletsRes).map(w => ({
         id: w.id,
         name: w.name,
         type: w.type,
@@ -57,7 +59,7 @@ export default async function handler(req, res) {
         userId: w.user_id
       }));
 
-      const formattedTx = (txRes.rows || []).map(t => ({
+      const formattedTx = getRows(txRes).map(t => ({
         id: t.id,
         title: t.title,
         amount: Number(t.amount || 0),
@@ -70,7 +72,7 @@ export default async function handler(req, res) {
         userId: t.user_id
       }));
 
-      const formattedGoals = (goalsRes.rows || []).map(g => ({
+      const formattedGoals = getRows(goalsRes).map(g => ({
         id: g.id,
         title: g.title,
         targetAmount: Number(g.target_amount || 0),
@@ -83,7 +85,7 @@ export default async function handler(req, res) {
         userId: g.user_id
       }));
 
-      const formattedBatches = (batchesRes.rows || []).map(b => ({
+      const formattedBatches = getRows(batchesRes).map(b => ({
         id: b.id,
         batchCode: b.batch_code,
         brand: b.brand,
@@ -96,7 +98,7 @@ export default async function handler(req, res) {
         userId: b.user_id
       }));
 
-      const formattedSales = (salesRes.rows || []).map(s => ({
+      const formattedSales = getRows(salesRes).map(s => ({
         id: s.id,
         brand: s.brand,
         variant: s.variant,
@@ -110,7 +112,7 @@ export default async function handler(req, res) {
       }));
 
       const settingsMap = {};
-      (settingsRes.rows || []).forEach(st => {
+      getRows(settingsRes).forEach(st => {
         settingsMap[st.setting_key] = st.setting_value;
       });
 
