@@ -1,10 +1,9 @@
 import { OAuth2Client } from 'google-auth-library';
-import jwt from 'jsonwebtoken';
 import { getDb } from '../_db.js';
+import { signToken } from '../_auth.js';
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID || '104560933562-fq59domirr6lj1dee565l92d7a7ib86b.apps.googleusercontent.com';
 const OWNER_EMAIL = (process.env.OWNER_EMAIL || 'andrasyahdand@gmail.com').toLowerCase();
-const JWT_SECRET = process.env.JWT_SECRET || 'velto_super_secure_jwt_secret_key_2026';
 
 const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 
@@ -119,17 +118,13 @@ export default async function handler(req, res) {
     }
 
     // 3. Issue secure JWT token
-    const token = jwt.sign(
-      {
-        id: userId,
-        email,
-        name: isOwner ? 'Andra Syahdan Daud' : name,
-        avatarUrl,
-        role: isOwner ? 'owner' : 'user'
-      },
-      JWT_SECRET,
-      { expiresIn: '30d' }
-    );
+    const token = signToken({
+      id: userId,
+      email,
+      name: isOwner ? 'Andra Syahdan Daud' : name,
+      avatarUrl,
+      role: isOwner ? 'owner' : 'user'
+    });
 
     return res.status(200).json({
       success: true,
@@ -143,7 +138,7 @@ export default async function handler(req, res) {
       }
     });
   } catch (error) {
-    console.error('[Google Auth Error]', error);
-    return res.status(500).json({ error: error.message || 'Authentication failed' });
+    console.error('[Google Auth Error]', error?.message || 'Unknown auth error');
+    return res.status(500).json({ error: 'Autentikasi Google gagal. Silakan coba kembali.' });
   }
 }

@@ -160,10 +160,8 @@ class CloudSyncService {
   startAutoSync() {
     if (this.autoSyncTimer) return;
 
-    // Push local state first so any pending changes on this device reach TiDB, then pull
-    this.syncLocalToCloud().finally(() => {
-      this.pullFromCloud();
-    });
+    // Pull from cloud FIRST so this device gets the latest server state immediately
+    this.pullFromCloud().catch(() => {});
 
     // Poll every 10 seconds for instant cross-device updates
     this.autoSyncTimer = setInterval(() => {

@@ -1,8 +1,7 @@
-import jwt from 'jsonwebtoken';
 import { getDb } from '../_db.js';
+import { signToken } from '../_auth.js';
 
 const OWNER_EMAIL = (process.env.OWNER_EMAIL || 'andrasyahdand@gmail.com').toLowerCase();
-const JWT_SECRET = process.env.JWT_SECRET || 'velto_super_secure_jwt_secret_key_2026';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -76,30 +75,26 @@ export default async function handler(req, res) {
       }
     }
 
-    // 3. Issue JWT Token (30 hari aktif)
-    const token = jwt.sign(
-      {
-        id: userId,
-        email: normalizedEmail,
-        name: isOwner ? 'Andra Syahdan Daud' : userName,
-        role: isOwner ? 'owner' : 'user'
-      },
-      JWT_SECRET,
-      { expiresIn: '30d' }
-    );
+    // 3. Issue secure JWT Token (30 hari aktif)
+    const token = signToken({
+      id: userId,
+      email: normalizedEmail,
+      name: isOwner ? 'Andra Syahdan Daud' : userName,
+      role: isOwner ? 'owner' : 'user'
+    });
 
     return res.status(200).json({
       success: true,
       token,
       user: {
         id: userId,
-        email: normalizedEmail,
+        email,
         name: isOwner ? 'Andra Syahdan Daud' : userName,
         role: isOwner ? 'owner' : 'user'
       }
     });
   } catch (err) {
-    console.error('[Login API Error]', err);
-    return res.status(500).json({ error: err.message || 'Login gagal pada database TiDB.' });
+    console.error('[Login API Error]', err?.message || 'Login failed');
+    return res.status(500).json({ error: 'Proses autentikasi gagal. Silakan periksa kembali data Anda.' });
   }
 }

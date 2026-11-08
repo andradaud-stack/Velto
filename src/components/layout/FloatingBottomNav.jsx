@@ -12,8 +12,8 @@ export default function FloatingBottomNav({ currentTab, setTab }) {
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden flex justify-center pb-safe">
-      <div className="w-full max-w-[420px] bg-white/95 backdrop-blur-md border-t border-[#ECE8F6] px-5 py-2.5 shadow-[0_-4px_24px_rgba(0,0,0,0.06)] flex items-center justify-between">
+    <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden flex justify-center pb-safe pointer-events-none">
+      <div className="w-full max-w-[420px] bg-white/95 backdrop-blur-md border-t border-[#ECE8F6] px-5 py-2 shadow-[0_-4px_24px_rgba(0,0,0,0.06)] flex items-center justify-between pointer-events-auto">
         {navTabs.map(tab => {
           const Icon = tab.icon;
           const isActive = currentTab === tab.id;

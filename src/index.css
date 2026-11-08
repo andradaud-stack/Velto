@@ -82,3 +82,11 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Mobile Safe Area Insets (handles modern notch and gesture bars on iOS & Android) */
+.pb-safe {
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 14px);
+}
+.pt-safe {
+  padding-top: max(env(safe-area-inset-top, 0px), 14px);
+}

@@ -103,11 +103,6 @@ export function FinanceProvider({ children }) {
       if (mounted) setIsDbReady(true);
     });
 
-    // Start Real-Time Cloud Sync across devices
-    if (user?.id) {
-      cloudSyncService.startAutoSync();
-    }
-
     const updateGoldRate = async () => {
       try {
         const result = await fetchLiveGoldPrice();
@@ -139,6 +134,18 @@ export function FinanceProvider({ children }) {
       clearInterval(goldInterval);
     };
   }, []);
+
+  // Real-Time Cloud Sync across devices: Starts immediately when user logs in, stops on logout
+  useEffect(() => {
+    if (user?.id) {
+      cloudSyncService.startAutoSync();
+    } else {
+      cloudSyncService.stopAutoSync();
+    }
+    return () => {
+      cloudSyncService.stopAutoSync();
+    };
+  }, [user?.id]);
 
   // Wallets mapping for instant ID lookup
   const walletMap = useMemo(() => {

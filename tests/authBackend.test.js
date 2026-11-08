@@ -1,10 +1,9 @@
-import { describe, it, expect } from 'vitest';
-import jwt from 'jsonwebtoken';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { signToken, verifyToken, getJwtSecret } from '../api/_auth.js';
+import { getDb } from '../api/_db.js';
 
 describe('Auth & JWT Reliability', () => {
-  const JWT_SECRET = 'velto_super_secure_jwt_secret_key_2026';
-
-  it('generates and verifies 30-day session token correctly', () => {
+  it('generates and verifies 30-day session token correctly via _auth helper', () => {
     const payload = {
       id: 'owner_andra',
       email: 'andrasyahdand@gmail.com',
@@ -12,17 +11,36 @@ describe('Auth & JWT Reliability', () => {
       role: 'owner'
     };
 
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '30d' });
+    const token = signToken(payload);
     expect(typeof token).toBe('string');
 
-    const decoded = jwt.verify(token, JWT_SECRET);
+    const decoded = verifyToken(token);
+    expect(decoded).not.toBeNull();
     expect(decoded.id).toBe('owner_andra');
     expect(decoded.email).toBe('andrasyahdand@gmail.com');
     expect(decoded.role).toBe('owner');
   });
 
-  it('rejects tampered or invalid JWT tokens', () => {
-    expect(() => jwt.verify('invalid.token.here', JWT_SECRET)).toThrow();
-    expect(() => jwt.verify('', JWT_SECRET)).toThrow();
+  it('rejects tampered or invalid JWT tokens safely without throwing', () => {
+    expect(verifyToken('invalid.token.here')).toBeNull();
+    expect(verifyToken('')).toBeNull();
+    expect(verifyToken(null)).toBeNull();
+  });
+
+  it('enforces secure handling when TIDB environment variables are absent', () => {
+    const originalUrl = process.env.DATABASE_URL;
+    const originalUser = process.env.TIDB_USER;
+    const originalPass = process.env.TIDB_PASSWORD;
+
+    delete process.env.DATABASE_URL;
+    delete process.env.TIDB_USER;
+    delete process.env.TIDB_PASSWORD;
+
+    expect(() => getDb()).toThrow(/Database authentication credentials missing/);
+
+    // Restore
+    if (originalUrl) process.env.DATABASE_URL = originalUrl;
+    if (originalUser) process.env.TIDB_USER = originalUser;
+    if (originalPass) process.env.TIDB_PASSWORD = originalPass;
   });
 });

@@ -1,6 +1,29 @@
 import { getDb } from './_db.js';
+import { verifyToken } from './_auth.js';
 
 export default async function handler(req, res) {
+  // Security guard: Require admin key or verified owner JWT in production
+  const adminKey = req.headers['x-admin-key'];
+  const authHeader = req.headers.authorization;
+  let isAuthorized = false;
+
+  if (process.env.ADMIN_KEY && adminKey === process.env.ADMIN_KEY) {
+    isAuthorized = true;
+  } else if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.split(' ')[1];
+    const payload = verifyToken(token);
+    if (payload && payload.role === 'owner') {
+      isAuthorized = true;
+    }
+  } else if (!process.env.VERCEL && process.env.NODE_ENV !== 'production') {
+    // Allowed only in isolated local environment
+    isAuthorized = true;
+  }
+
+  if (!isAuthorized) {
+    return res.status(403).json({ error: 'Akses ditolak: Dibutuhkan kredensial administrator.' });
+  }
+
   try {
     const db = getDb();
 
@@ -127,10 +150,10 @@ export default async function handler(req, res) {
       message: 'TiDB database tables successfully initialized for Velto Finance multi-tenancy.'
     });
   } catch (error) {
-    console.error('[TiDB Init Error]', error);
+    console.error('[TiDB Init Error]', error?.message || 'Database init failed');
     return res.status(500).json({
       success: false,
-      error: error.message
+      error: 'Inisialisasi database gagal.'
     });
   }
 }

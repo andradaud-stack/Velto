@@ -1,7 +1,5 @@
-import jwt from 'jsonwebtoken';
 import { getDb } from './_db.js';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'velto_super_secure_jwt_secret_key_2026';
+import { verifyToken } from './_auth.js';
 
 function authenticateRequest(req) {
   const authHeader = req.headers.authorization;
@@ -9,11 +7,7 @@ function authenticateRequest(req) {
     return null;
   }
   const token = authHeader.split(' ')[1];
-  try {
-    return jwt.verify(token, JWT_SECRET);
-  } catch (err) {
-    return null;
-  }
+  return verifyToken(token);
 }
 
 export default async function handler(req, res) {
@@ -29,9 +23,13 @@ export default async function handler(req, res) {
 
     // GET: Fetch all data for this specific user
     if (req.method === 'GET') {
-      // Auto-correct any leftover hardcoded seed balances to Rp 0 for owner
+      // Auto-correct any leftover hardcoded seed balances to Rp 0 for owner & unify legacy user_id
       if (userId === 'owner_andra') {
         try {
+          await db.execute("UPDATE wallets SET user_id = 'owner_andra' WHERE user_id = 'andra'");
+          await db.execute("UPDATE transactions SET user_id = 'owner_andra' WHERE user_id = 'andra'");
+          await db.execute("UPDATE goals SET user_id = 'owner_andra' WHERE user_id = 'andra'");
+
           const jagoCheck = await db.execute("SELECT balance FROM wallets WHERE user_id = ? AND id = 'jago' LIMIT 1", [userId]);
           const jagoRows = Array.isArray(jagoCheck) ? jagoCheck : (jagoCheck?.rows || []);
           if (Number(jagoRows[0]?.balance || 0) === 400000) {
@@ -311,7 +309,7 @@ export default async function handler(req, res) {
 
     return res.status(405).json({ error: 'Method not allowed' });
   } catch (error) {
-    console.error('[Sync Error]', error);
-    return res.status(500).json({ error: error.message || 'Sync failed' });
+    console.error('[Sync Error]', error?.message || 'Sync operation failed');
+    return res.status(500).json({ error: 'Sinkronisasi data gagal. Silakan coba kembali.' });
   }
 }
