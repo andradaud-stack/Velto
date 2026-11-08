@@ -137,6 +137,25 @@ class CloudSyncService {
     }
   }
 
+  // Reset all cloud cards to Rp 0
+  async resetCloudToZero() {
+    const token = this.getToken();
+    if (!token) return;
+
+    try {
+      await fetch('/api/sync', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ action: 'reset_to_zero' })
+      });
+    } catch (err) {
+      console.warn('[CloudSync resetCloudToZero error]', err);
+    }
+  }
+
   // Real-time synchronization across devices (polling + focus events)
   startAutoSync() {
     if (this.autoSyncTimer) return;

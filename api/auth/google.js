@@ -84,14 +84,14 @@ export default async function handler(req, res) {
       );
 
       if (count === 0) {
-        // Seed authentic owner wallets
+        // Seed authentic owner wallets (Semua saldo mulai dari Rp 0 bersih)
         const ownerWallets = [
-          ['jago', userId, 'Jago Syariah', 'bank', 400000, 0, 0, null, null],
-          ['mandiri', userId, 'Mandiri Debit Gold', 'bank', 1000, 0, 0, null, null],
+          ['jago', userId, 'Jago Syariah', 'bank', 0, 0, 0, null, null],
+          ['mandiri', userId, 'Mandiri Debit Gold', 'bank', 0, 0, 0, null, null],
           ['dana', userId, 'DANA', 'ewallet', 0, 0, 0, null, null],
           ['emas', userId, 'DANA eMAS', 'investment', 0, 0, 0, null, null],
-          ['bibit', userId, 'Investasi Bibit', 'investment', 10000, 10000, 0, null, null],
-          ['cash', userId, 'Uang Cash', 'liquid', 450000, 0, 0, null, null],
+          ['bibit', userId, 'Investasi Bibit', 'investment', 0, 0, 0, null, null],
+          ['cash', userId, 'Uang Cash', 'liquid', 0, 0, 0, null, null],
           ['parfum', userId, 'Laba Bisnis Parfum', 'business', 0, 0, 0, null, null]
         ];
 

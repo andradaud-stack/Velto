@@ -29,6 +29,20 @@ export default async function handler(req, res) {
 
     // GET: Fetch all data for this specific user
     if (req.method === 'GET') {
+      // Auto-correct any leftover hardcoded seed balances to Rp 0 for owner
+      if (userId === 'owner_andra') {
+        try {
+          const jagoCheck = await db.execute("SELECT balance FROM wallets WHERE user_id = ? AND id = 'jago' LIMIT 1", [userId]);
+          const jagoRows = Array.isArray(jagoCheck) ? jagoCheck : (jagoCheck?.rows || []);
+          if (Number(jagoRows[0]?.balance || 0) === 400000) {
+            await db.execute("UPDATE wallets SET balance = 0, invested_capital = 0, gold_grams = 0 WHERE user_id = ?", [userId]);
+            await db.execute("DELETE FROM transactions WHERE user_id = ? AND (id LIKE '%init%' OR title LIKE '%Saldo Awal%')", [userId]);
+          }
+        } catch (e) {
+          console.warn('[Auto-reset check warning]', e);
+        }
+      }
+
       const [
         walletsRes,
         txRes,
@@ -132,6 +146,13 @@ export default async function handler(req, res) {
     // POST: Save or batch sync mutations
     if (req.method === 'POST') {
       const { type, action, item, items } = req.body;
+
+      // Reset all cards to clean Rp 0 balance
+      if (action === 'reset_to_zero') {
+        await db.execute("UPDATE wallets SET balance = 0, invested_capital = 0, gold_grams = 0 WHERE user_id = ?", [userId]);
+        await db.execute("DELETE FROM transactions WHERE user_id = ?", [userId]);
+        return res.status(200).json({ success: true, message: 'All wallets reset to Rp 0' });
+      }
 
       // Batch Sync (Full push from active device)
       if (action === 'batch_sync' && items) {

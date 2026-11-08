@@ -1066,6 +1066,8 @@ export function FinanceProvider({ children }) {
           { key: 'cleared_to_zero_v2', value: true }
         ]);
       });
+      await cloudSyncService.resetCloudToZero();
+      await cloudSyncService.syncLocalToCloud();
       notificationService.success('Seluruh saldo & data berhasil direset ke 0', 'Reset Selesai');
       return { success: true };
     } catch (err) {
