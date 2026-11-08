@@ -196,49 +196,64 @@ export async function deleteSale(saleId) {
  * Calculate dashboard aggregates.
  */
 export async function getDashboardStats() {
-  const [batches, sales] = await Promise.all([
-    db.parfumBatches.toArray(),
-    db.parfumSales.toArray()
-  ]);
+  try {
+    const [batches, sales] = await Promise.all([
+      db.parfumBatches ? db.parfumBatches.toArray() : [],
+      db.parfumSales ? db.parfumSales.toArray() : []
+    ]);
 
-  const totalOmzet = sales.reduce((s, x) => s + (x.omzet || 0), 0);
-  const totalCogs = sales.reduce((s, x) => s + (x.cogs || 0), 0);
-  const totalBiayaOps = sales.reduce((s, x) => s + (x.biayaOperasional || 0), 0);
-  const totalLabaBersih = sales.reduce((s, x) => s + (x.labaBersih || 0), 0);
+    const totalOmzet = (sales || []).reduce((s, x) => s + (x.omzet || 0), 0);
+    const totalCogs = (sales || []).reduce((s, x) => s + (x.cogs || 0), 0);
+    const totalBiayaOps = (sales || []).reduce((s, x) => s + (x.biayaOperasional || 0), 0);
+    const totalLabaBersih = (sales || []).reduce((s, x) => s + (x.labaBersih || 0), 0);
 
-  // Nilai aset stok = sum(qtyRemaining * costPerUnit) for all active batches
-  const nilaiStok = batches.reduce((s, b) => s + (b.qtyRemaining * b.costPerUnit), 0);
+    // Nilai aset stok = sum(qtyRemaining * costPerUnit) for all active batches
+    const nilaiStok = (batches || []).reduce((s, b) => s + ((b.qtyRemaining || 0) * (b.costPerUnit || 0)), 0);
 
-  // Best seller by variant (most qtySold)
-  const variantSales = {};
-  for (const sale of sales) {
-    const key = `${sale.brand} - ${sale.variant}`;
-    variantSales[key] = (variantSales[key] || 0) + sale.qtySold;
+    // Best seller by variant (most qtySold)
+    const variantSales = {};
+    for (const sale of (sales || [])) {
+      const key = `${sale.brand || 'Parfum'} - ${sale.variant || 'Variant'}`;
+      variantSales[key] = (variantSales[key] || 0) + (sale.qtySold || 0);
+    }
+    const bestSeller = Object.entries(variantSales)
+      .sort(([, a], [, b]) => b - a)
+      .map(([name, qty]) => ({ name, qty }));
+
+    // Stock per variant (all variants with any batch)
+    const stockMap = {};
+    for (const b of (batches || [])) {
+      const key = `${b.brand || 'Parfum'}||${b.variant || 'Variant'}`;
+      if (!stockMap[key]) stockMap[key] = { brand: b.brand || 'Parfum', variant: b.variant || 'Variant', qty: 0 };
+      stockMap[key].qty += (b.qtyRemaining || 0);
+    }
+    const stockPerVariant = Object.values(stockMap).sort((a, b) => (a.variant || '').localeCompare(b.variant || ''));
+
+    return {
+      totalOmzet,
+      totalCogs,
+      totalBiayaOps,
+      totalLabaBersih,
+      nilaiStok,
+      bestSeller,
+      stockPerVariant,
+      totalBatches: (batches || []).length,
+      totalSalesCount: (sales || []).length
+    };
+  } catch (err) {
+    console.warn('[FIFO] getDashboardStats error:', err);
+    return {
+      totalOmzet: 0,
+      totalCogs: 0,
+      totalBiayaOps: 0,
+      totalLabaBersih: 0,
+      nilaiStok: 0,
+      bestSeller: [],
+      stockPerVariant: [],
+      totalBatches: 0,
+      totalSalesCount: 0
+    };
   }
-  const bestSeller = Object.entries(variantSales)
-    .sort(([, a], [, b]) => b - a)
-    .map(([name, qty]) => ({ name, qty }));
-
-  // Stock per variant (all variants with any batch)
-  const stockMap = {};
-  for (const b of batches) {
-    const key = `${b.brand}||${b.variant}`;
-    if (!stockMap[key]) stockMap[key] = { brand: b.brand, variant: b.variant, qty: 0 };
-    stockMap[key].qty += b.qtyRemaining;
-  }
-  const stockPerVariant = Object.values(stockMap).sort((a, b) => a.variant.localeCompare(b.variant));
-
-  return {
-    totalOmzet,
-    totalCogs,
-    totalBiayaOps,
-    totalLabaBersih,
-    nilaiStok,
-    bestSeller,
-    stockPerVariant,
-    totalBatches: batches.length,
-    totalSalesCount: sales.length
-  };
 }
 
 /**

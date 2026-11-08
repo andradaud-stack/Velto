@@ -13,7 +13,10 @@ export default function GoldPriceChart({
 
   if (!historyData || historyData.length === 0) return null;
 
-  const prices = historyData.map(d => d.price);
+  const validData = historyData.filter(d => d && typeof d.price === 'number' && !isNaN(d.price));
+  if (validData.length === 0) return null;
+
+  const prices = validData.map(d => Number(d.price) || 0);
   const minPrice = Math.min(...prices);
   const maxPrice = Math.max(...prices);
   const priceRange = maxPrice - minPrice || 1;
@@ -28,9 +31,10 @@ export default function GoldPriceChart({
   const chartHeight = height - paddingTop - paddingBottom;
   const chartWidth = width - (paddingX * 2);
 
-  const points = historyData.map((d, index) => {
-    const x = paddingX + (index / (historyData.length - 1)) * chartWidth;
-    const y = paddingTop + chartHeight - ((d.price - minPrice) / priceRange) * chartHeight;
+  const points = validData.map((d, index) => {
+    const divisor = validData.length > 1 ? validData.length - 1 : 1;
+    const x = paddingX + (index / divisor) * chartWidth;
+    const y = paddingTop + chartHeight - (((Number(d.price) || 0) - minPrice) / priceRange) * chartHeight;
     return { ...d, x, y };
   });
 

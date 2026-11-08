@@ -42,6 +42,7 @@ export function formatPercentage(value, showSign = true) {
 export function formatDateIndo(dateStr) {
   if (!dateStr) return '';
   const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return '';
   return d.toLocaleDateString('id-ID', {
     day: 'numeric',
     month: 'short',
@@ -55,6 +56,7 @@ export function formatDateIndo(dateStr) {
 export function formatDateTimeIndo(dateStr) {
   if (!dateStr) return '';
   const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return '';
   return d.toLocaleDateString('id-ID', {
     day: 'numeric',
     month: 'short',

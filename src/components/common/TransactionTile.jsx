@@ -11,6 +11,8 @@ import {
 import { formatRupiah, formatDateTimeIndo } from '../../core/utils/currencyFormatter';
 
 export default function TransactionTile({ transaction }) {
+  if (!transaction) return null;
+
   const isIncome = transaction.type === 'allowance_in' || 
                    transaction.type === 'allowance' || 
                    transaction.type === 'income' || 

@@ -3,7 +3,14 @@ import { Check } from 'lucide-react';
 import { formatRupiah, formatDateTimeIndo } from '../../core/utils/currencyFormatter';
 
 export default function PaymentTrackerTimeline({ transaction }) {
-  if (!transaction) return null;
+  if (!transaction) {
+    return (
+      <div className="bg-white rounded-3xl p-5 border border-[#ECE8F6] shadow-soft-card text-center py-6">
+        <p className="text-xs font-bold text-[#1E1B2E]">Belum Ada Aktivitas Pembayaran</p>
+        <p className="text-[11px] text-[#7E7A9B] mt-1">Transaksi pengeluaran dan mutasi rutin akan tampil di sini.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-3xl p-5 border border-[#ECE8F6] shadow-soft-card space-y-4">

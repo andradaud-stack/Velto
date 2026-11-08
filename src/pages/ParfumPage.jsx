@@ -105,14 +105,14 @@ function DashboardTab({ stats, loading, onRefresh }) {
       </div>
 
       {/* Best Seller */}
-      {stats.bestSeller.length > 0 && (
+      {(stats?.bestSeller || []).length > 0 && (
         <div className="bg-white rounded-3xl p-4 shadow-soft-card">
           <div className="flex items-center gap-2 mb-3">
             <Star className="w-4 h-4 text-[#F59E0B]" />
             <h3 className="text-sm font-black text-[#1E1B2E]">Best Seller</h3>
           </div>
           <div className="space-y-2">
-            {stats.bestSeller.slice(0, 5).map((item, i) => (
+            {(stats.bestSeller || []).slice(0, 5).map((item, i) => (
               <div key={item.name} className="flex items-center gap-3">
                 <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black ${
                   i === 0 ? 'bg-[#F59E0B] text-white' :
@@ -129,14 +129,14 @@ function DashboardTab({ stats, loading, onRefresh }) {
       )}
 
       {/* Stock per variant */}
-      {stats.stockPerVariant.length > 0 && (
+      {(stats?.stockPerVariant || []).length > 0 && (
         <div className="bg-white rounded-3xl p-4 shadow-soft-card">
           <div className="flex items-center gap-2 mb-3">
             <Package className="w-4 h-4 text-[#6633EE]" />
             <h3 className="text-sm font-black text-[#1E1B2E]">Monitoring Stok</h3>
           </div>
           <div className="space-y-2">
-            {stats.stockPerVariant.map(sv => (
+            {(stats.stockPerVariant || []).map(sv => (
               <div key={`${sv.brand}-${sv.variant}`} className="flex items-center gap-3">
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-bold text-[#1E1B2E] truncate">{sv.variant}</p>

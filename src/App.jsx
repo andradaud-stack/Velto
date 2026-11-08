@@ -5,6 +5,7 @@ import HeaderTopBar from './components/layout/HeaderTopBar';
 import FloatingBottomNav from './components/layout/FloatingBottomNav';
 import SidebarNav from './components/layout/SidebarNav';
 import ToastBanner from './components/common/ToastBanner';
+import ErrorBoundary from './components/common/ErrorBoundary';
 
 // Modals & Auth
 import SecurityAuthModal from './components/modals/SecurityAuthModal';
@@ -152,6 +153,7 @@ function AppContent() {
             />
 
             {/* Desktop Dashboard Grid (> 768px) */}
+            <ErrorBoundary>
             {liveSelectedWallet ? (
               <div className="mt-2">
                 <WalletDetailPage
@@ -225,6 +227,7 @@ function AppContent() {
                 )}
               </div>
             )}
+            </ErrorBoundary>
           </div>
         </div>
       </div>

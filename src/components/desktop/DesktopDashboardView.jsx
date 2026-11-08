@@ -665,47 +665,7 @@ export default function DesktopDashboardView({
             <tbody className="divide-y divide-[#F4F2FA]">
               {filteredTransactions.slice(0, 7).map(tx => {
                 const isExpense = tx.type === 'expense';
-                // Real-time dynamic dates and streak calculation
-  const streakInfo = useMemo(() => {
-    return calculateSavingStreak(transactions, primaryGoal ? [primaryGoal] : []);
-  }, [transactions, primaryGoal]);
-
-  const dynamicDates = useMemo(() => {
-    const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth();
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-    const shortDays = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
-    const dayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
-    const todayName = dayNames[now.getDay()];
-
-    const months = [];
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date(currentYear, currentMonth - i, 1);
-      months.push({
-        label: monthNames[d.getMonth()],
-        isCurrent: i === 0
-      });
-    }
-
-    const years = [];
-    for (let i = 4; i >= 0; i--) {
-      const yr = (currentYear - i + 1).toString();
-      years.push({
-        label: yr,
-        isCurrent: yr === currentYear.toString()
-      });
-    }
-
-    return {
-      todayName,
-      months,
-      years,
-      shortDays
-    };
-  }, []);
-
-  return (
+                return (
                   <tr key={tx.id} className="hover:bg-[#FAF9FD]/80 transition-colors">
                     <td className="py-3 px-4 text-[#7E7A9B] whitespace-nowrap font-medium">
                       {formatDateTimeIndo(tx.date)}

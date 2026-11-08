@@ -11,9 +11,12 @@ export default function MutasiPage({ onOpenNewTransaction }) {
   const [selectedCategory, setSelectedCategory] = useState('all');
 
   const filteredTransactions = (transactions || []).filter(tx => {
-    const matchesSearch = tx.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          (tx.details && tx.details.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                          (tx.category && tx.category.toLowerCase().includes(searchTerm.toLowerCase()));
+    if (!tx) return false;
+    const query = (searchTerm || '').toLowerCase().trim();
+    const matchesSearch = !query ||
+                          (tx.title || '').toLowerCase().includes(query) ||
+                          (tx.details || '').toLowerCase().includes(query) ||
+                          (tx.category || '').toLowerCase().includes(query);
     
     if (!matchesSearch) return false;
     if (selectedCategory === 'all') return true;
