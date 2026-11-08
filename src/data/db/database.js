@@ -32,8 +32,8 @@ export async function initializeDatabase() {
     if (walletCount === 0) {
       console.log('[Dexie] Initializing fresh database with clean 0 balance...');
       await db.transaction('rw', [db.wallets, db.goals, db.transactions, db.settings], async () => {
-        await db.wallets.bulkAdd(INITIAL_WALLETS);
-        await db.settings.bulkAdd([
+        await db.wallets.bulkPut(INITIAL_WALLETS);
+        await db.settings.bulkPut([
           { key: 'theme', value: 'lavender' },
           { key: 'lastMarketSync', value: new Date().toISOString() },
           { key: 'goldPricePerGram', value: 1300000 },
