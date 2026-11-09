@@ -8,7 +8,13 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:k6:smoke": "k6 run tests/performance/smoke-test.js",
+    "test:k6:baseline": "k6 run tests/performance/baseline-test.js",
+    "test:k6:capacity": "k6 run tests/performance/capacity-test.js",
+    "test:k6:stress": "k6 run tests/performance/stress-test.js",
+    "test:k6:spike": "k6 run tests/performance/spike-test.js",
+    "test:k6:soak": "k6 run tests/performance/soak-test.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",
