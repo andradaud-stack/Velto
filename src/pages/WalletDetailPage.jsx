@@ -12,6 +12,7 @@ import {
   Lock,
   RefreshCw,
   Plus,
+  PlusCircle,
   Package,
   Pencil
 } from 'lucide-react';
@@ -35,6 +36,7 @@ export default function WalletDetailPage({
   goldMarketInfo,
   onBack, 
   onEditWallet,
+  onOpenTopUp,
   onOpenMarketSync,
   onOpenTransfer,
   onOpenBuyGold,
@@ -244,7 +246,17 @@ export default function WalletDetailPage({
         )}
 
         {/* Action Buttons */}
-        <div className="mt-4 flex items-center gap-2">
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          {onOpenTopUp && (
+            <button
+              onClick={() => onOpenTopUp(wallet)}
+              className="flex-1 min-w-[130px] py-2.5 px-3 rounded-2xl bg-gradient-to-r from-[#6633EE] to-[#8054F6] hover:from-[#5727D8] hover:to-[#6F3FF0] text-white text-xs font-black flex items-center justify-center gap-1.5 shadow-[0_6px_16px_-3px_rgba(102,51,238,0.4)] transition-all active:scale-95 cursor-pointer"
+            >
+              <PlusCircle className="w-4 h-4 stroke-[2.5]" />
+              <span>+ Tambah Saldo</span>
+            </button>
+          )}
+
           {wallet.id === 'parfum' && onOpenParfum && (
             <button
               onClick={onOpenParfum}

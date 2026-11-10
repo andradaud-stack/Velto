@@ -31,7 +31,8 @@ export default function DesktopDashboardView({
   onOpenNewTransaction,
   onSelectWallet,
   onOpenProfile,
-  onOpenEditGoal
+  onOpenEditGoal,
+  onTopUpWallet
 }) {
   const {
     wallets,
@@ -147,7 +148,7 @@ export default function DesktopDashboardView({
                   onClick={() => onSelectWallet && onSelectWallet(currentWallet)}
                   className="cursor-pointer transform hover:scale-[1.01] transition-all"
                 >
-                  <BankJagoHeroCard wallet={currentWallet} />
+                  <BankJagoHeroCard wallet={currentWallet} onTopUp={onTopUpWallet} />
                 </div>
               ) : (
                 <div 

@@ -10,7 +10,8 @@ import {
   Shield,
   Heart,
   MoreVertical,
-  Pencil
+  Pencil,
+  Plus
 } from 'lucide-react';
 import { formatRupiah, formatGoldGrams } from '../../core/utils/currencyFormatter';
 
@@ -26,7 +27,7 @@ const ICONS = {
   Heart
 };
 
-export default function SplitPaymentCard({ wallet, onClick, onEdit }) {
+export default function SplitPaymentCard({ wallet, onClick, onEdit, onTopUp }) {
   if (!wallet) return null;
 
   const splitStyles = {
@@ -126,6 +127,21 @@ export default function SplitPaymentCard({ wallet, onClick, onEdit }) {
             {defaultStyle.subRight}
           </span>
         </div>
+
+        {onTopUp && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onTopUp(wallet);
+            }}
+            className="px-2.5 py-1.5 rounded-xl bg-white/20 hover:bg-white/35 text-white text-xs font-black flex items-center gap-1 backdrop-blur-md border border-white/25 transition-all active:scale-95 cursor-pointer ml-1"
+            title="Tambah Saldo"
+          >
+            <Plus className="w-3.5 h-3.5 stroke-[3]" />
+            <span>+ Saldo</span>
+          </button>
+        )}
 
         {onEdit && (
           <button

@@ -9,12 +9,13 @@ import {
   Check, 
   Eye, 
   EyeOff, 
-  ShieldCheck 
+  ShieldCheck,
+  Plus 
 } from 'lucide-react';
 import { formatRupiah, formatGoldGrams } from '../../core/utils/currencyFormatter';
 import { useAuth } from '../../context/AuthContext';
 
-export default function BankJagoHeroCard({ wallet }) {
+export default function BankJagoHeroCard({ wallet, onTopUp }) {
   const { user } = useAuth();
   const [copied, setCopied] = useState(false);
   const [showNumber, setShowNumber] = useState(false);
@@ -151,13 +152,30 @@ export default function BankJagoHeroCard({ wallet }) {
             className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none" 
           />
 
-          {/* Top Header with clean live balance badge */}
-          <div className="relative z-10 flex items-center justify-end">
-            <div className="text-right bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-white/10 shadow-xs">
-              <span className="text-[9px] font-semibold text-white/75 block uppercase tracking-wider leading-tight">Saldo</span>
-              <span className="text-sm font-black text-white tracking-tight drop-shadow-md leading-tight">
-                {formatRupiah(wallet.balance)}
-              </span>
+          {/* Top Header with clean live balance badge and + Isi Saldo button */}
+          <div className="relative z-10 flex items-center justify-between">
+            <div className="flex-1" />
+            <div className="flex items-center gap-1.5">
+              <div className="text-right bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-white/10 shadow-xs">
+                <span className="text-[9px] font-semibold text-white/75 block uppercase tracking-wider leading-tight">Saldo</span>
+                <span className="text-sm font-black text-white tracking-tight drop-shadow-md leading-tight">
+                  {formatRupiah(wallet.balance)}
+                </span>
+              </div>
+              {onTopUp && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onTopUp(wallet);
+                  }}
+                  className="px-2.5 py-2 rounded-2xl bg-white/25 hover:bg-white/40 backdrop-blur-md text-white text-[11px] font-black flex items-center gap-1 border border-white/20 active:scale-95 transition-all shadow-xs cursor-pointer"
+                  title="Isi Saldo Jago Syariah"
+                >
+                  <Plus className="w-3.5 h-3.5 stroke-[3]" />
+                  <span>Isi</span>
+                </button>
+              )}
             </div>
           </div>
 
@@ -234,17 +252,31 @@ export default function BankJagoHeroCard({ wallet }) {
         <div className="relative z-10 h-10" />
       )}
 
-      {/* Subtitle & Balance Display */}
+      {/* Subtitle & Balance Display with + Isi Saldo button */}
       <div className="relative z-10 mt-auto pt-2">
         {!isMandiriCard && (
           <p className="text-[10px] tracking-wider text-white/80 uppercase font-bold">
             {theme.cardLabel}
           </p>
         )}
-        <div className="flex items-baseline gap-2">
+        <div className="flex items-baseline justify-between gap-2">
           <span className="text-2xl sm:text-3xl font-black tracking-tight drop-shadow-md text-white">
             {formatRupiah(wallet.balance)}
           </span>
+          {onTopUp && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onTopUp(wallet);
+              }}
+              className="px-3 py-1.5 rounded-xl bg-white/20 hover:bg-white/35 backdrop-blur-md text-white text-xs font-black flex items-center gap-1.5 border border-white/20 active:scale-95 transition-all shadow-xs cursor-pointer"
+              title="Isi Saldo Kantong Ini"
+            >
+              <Plus className="w-3.5 h-3.5 stroke-[3]" />
+              <span>+ Isi Saldo</span>
+            </button>
+          )}
         </div>
       </div>
 

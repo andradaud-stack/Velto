@@ -445,7 +445,7 @@ export function FinanceProvider({ children }) {
     }
   };
 
-  // Update wallet name, color, icon, photo, or type
+  // Update wallet name, color, icon, photo, type, or balance
   const updateWallet = async (walletId, updateData) => {
     try {
       const wallet = await db.wallets.get(walletId);
@@ -459,12 +459,102 @@ export function FinanceProvider({ children }) {
         payload.bgColor = `${updateData.color}15`;
       }
 
-      await db.wallets.update(walletId, payload);
+      const oldBalance = Number(wallet.balance || 0);
+      const hasBalanceChange = updateData.balance !== undefined && Number(updateData.balance) !== oldBalance;
+
+      await db.transaction('rw', [db.wallets, db.transactions], async () => {
+        if (hasBalanceChange) {
+          const newBal = Number(updateData.balance);
+          payload.balance = newBal;
+          const diff = newBal - oldBalance;
+          if (wallet.type !== 'investment') {
+            payload.investedCapital = Math.max(0, (wallet.investedCapital || 0) + diff);
+          }
+
+          await db.transactions.add({
+            id: `tx_${Date.now()}_baladj`,
+            type: diff >= 0 ? 'income' : 'expense',
+            title: `Atur Saldo ${updateData.name || wallet.name}`,
+            amount: Math.abs(diff),
+            category: 'Pemasukan',
+            date: new Date().toISOString(),
+            walletId,
+            details: `Penyesuaian saldo dari ${formatRupiah(oldBalance)} ke ${formatRupiah(newBal)}`,
+            status: 'success'
+          });
+        }
+
+        await db.wallets.update(walletId, payload);
+      });
+
       cloudSyncService.syncLocalToCloud().catch(() => {});
       notificationService.success(`Kantong "${updateData.name || wallet.name}" berhasil diperbarui!`, 'Tersimpan');
       return { success: true };
     } catch (err) {
       notificationService.error(err.message, 'Gagal Update Kantong');
+      return { success: false, error: err.message };
+    }
+  };
+
+  // Top up / Add balance to any card directly
+  const topUpWallet = async ({ walletId, amount, isDirectSet = false, note = '' }) => {
+    try {
+      const num = Number(amount);
+      if (isNaN(num) || num < 0) throw new Error('Nominal saldo tidak valid.');
+
+      await db.transaction('rw', [db.wallets, db.transactions], async () => {
+        const wallet = await db.wallets.get(walletId);
+        if (!wallet) throw new Error('Kantong tidak ditemukan.');
+
+        const oldBalance = Number(wallet.balance || 0);
+        const newBalance = isDirectSet ? num : oldBalance + num;
+        const diff = newBalance - oldBalance;
+
+        if (diff === 0 && !isDirectSet) return;
+
+        const updateData = {
+          balance: newBalance,
+          updatedAt: new Date().toISOString()
+        };
+
+        if (wallet.type !== 'investment') {
+          updateData.investedCapital = Math.max(0, (wallet.investedCapital || 0) + diff);
+        } else {
+          if (diff > 0) {
+            updateData.investedCapital = (wallet.investedCapital || 0) + diff;
+            if (wallet.id === 'emas') {
+              const goldPrice = goldMarketInfo.price || 2415631;
+              const extraGrams = diff / goldPrice;
+              updateData.goldGrams = Number(((wallet.goldGrams || 0) + extraGrams).toFixed(4));
+            }
+          }
+        }
+
+        await db.wallets.update(walletId, updateData);
+
+        // Record a transaction for mutasi
+        if (diff !== 0) {
+          await db.transactions.add({
+            id: `tx_${Date.now()}_topup`,
+            type: diff >= 0 ? 'income' : 'expense',
+            title: note || (isDirectSet ? `Koreksi Saldo ${wallet.name}` : `Isi Saldo ${wallet.name}`),
+            amount: Math.abs(diff),
+            category: 'Pemasukan',
+            date: new Date().toISOString(),
+            walletId,
+            details: note || (isDirectSet 
+              ? `Penyesuaian saldo dari ${formatRupiah(oldBalance)} menjadi ${formatRupiah(newBalance)}` 
+              : `Setoran dana / top up ke ${wallet.name}`),
+            status: 'success'
+          });
+        }
+      });
+
+      cloudSyncService.syncLocalToCloud().catch(() => {});
+      notificationService.success(`Saldo ${walletMap[walletId]?.name || 'Kantong'} berhasil ditambahkan!`, 'Saldo Berhasil Ditambahkan');
+      return { success: true };
+    } catch (err) {
+      notificationService.error(err.message, 'Gagal Menambah Saldo');
       return { success: false, error: err.message };
     }
   };
@@ -1098,6 +1188,7 @@ export function FinanceProvider({ children }) {
     executeWeeklyAllowance,
     createNewWallet,
     updateWallet,
+    topUpWallet,
     deleteWallet,
     recordParfumProfit,
     syncMarketRevaluation,

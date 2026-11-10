@@ -19,6 +19,7 @@ import EditGoalModal from './components/modals/EditGoalModal';
 import NewGoalModal from './components/modals/NewGoalModal';
 import TransactionFormModal from './components/modals/TransactionFormModal';
 import BuyGoldModal from './components/modals/BuyGoldModal';
+import TopUpModal from './components/modals/TopUpModal';
 
 // Pages
 import OverviewPage from './pages/OverviewPage';
@@ -56,6 +57,7 @@ function AppContent() {
   const [newGoalModalOpen, setNewGoalModalOpen] = useState(false);
   const [transactionModalOpen, setTransactionModalOpen] = useState(false);
   const [buyGoldModalOpen, setBuyGoldModalOpen] = useState(false);
+  const [topUpModal, setTopUpModal] = useState({ isOpen: false, wallet: null });
 
   const { 
     resetToFactoryDefaults, 
@@ -163,6 +165,7 @@ function AppContent() {
                   goldMarketInfo={goldMarketInfo}
                   onBack={() => setSelectedWallet(null)}
                   onEditWallet={(w) => setEditWalletModal({ isOpen: true, wallet: w })}
+                  onOpenTopUp={(w) => setTopUpModal({ isOpen: true, wallet: w })}
                   onOpenMarketSync={(w) => setMarketSyncModal({ isOpen: true, wallet: w })}
                   onOpenTransfer={() => setQuickActionModal({ isOpen: true, tab: 'transfer' })}
                   onOpenBuyGold={() => setBuyGoldModalOpen(true)}
@@ -186,6 +189,7 @@ function AppContent() {
                     onSelectWallet={handleSelectWallet}
                     onOpenProfile={() => setProfileModalOpen(true)}
                     onOpenEditGoal={() => setEditGoalModalOpen(true)}
+                    onTopUpWallet={(w) => setTopUpModal({ isOpen: true, wallet: w })}
                   />
                 </div>
 
@@ -196,6 +200,7 @@ function AppContent() {
                     onOpenEstimate={() => setEstimateModalOpen(true)}
                     onOpenOptions={() => setMarketSyncModal({ isOpen: true, wallet: null })}
                     onSelectWallet={handleSelectWallet}
+                    onTopUpWallet={(w) => setTopUpModal({ isOpen: true, wallet: w })}
                   />
                 </div>
               </div>
@@ -206,6 +211,7 @@ function AppContent() {
                     onSelectWallet={handleSelectWallet}
                     onOpenNewWallet={() => setNewWalletModalOpen(true)}
                     onEditWallet={(w) => setEditWalletModal({ isOpen: true, wallet: w })}
+                    onTopUpWallet={(w) => setTopUpModal({ isOpen: true, wallet: w })}
                   />
                 )}
                 {currentTab === 'parfum' && (
@@ -300,6 +306,12 @@ function AppContent() {
       <BuyGoldModal
         isOpen={buyGoldModalOpen}
         onClose={() => setBuyGoldModalOpen(false)}
+      />
+
+      <TopUpModal
+        isOpen={topUpModal.isOpen}
+        targetWallet={topUpModal.wallet}
+        onClose={() => setTopUpModal({ isOpen: false, wallet: null })}
       />
     </div>
   );

@@ -58,6 +58,7 @@ export default function EditWalletModal({ isOpen, onClose, wallet, onDeleteSucce
   const { updateWallet, deleteWallet } = useFinance();
 
   const [name, setName] = useState('');
+  const [balance, setBalance] = useState('');
   const [type, setType] = useState('bank');
   const [color, setColor] = useState('#6633EE');
   const [icon, setIcon] = useState('CreditCard');
@@ -70,6 +71,7 @@ export default function EditWalletModal({ isOpen, onClose, wallet, onDeleteSucce
   useEffect(() => {
     if (wallet) {
       setName(wallet.name || '');
+      setBalance(wallet.balance != null ? String(wallet.balance) : '0');
       setType(wallet.type || 'bank');
       setColor(wallet.color || '#6633EE');
       setIcon(wallet.icon || 'CreditCard');
@@ -137,7 +139,8 @@ export default function EditWalletModal({ isOpen, onClose, wallet, onDeleteSucce
       type,
       color,
       icon,
-      photoUrl
+      photoUrl,
+      balance: balance !== '' ? Number(balance) : wallet.balance
     });
     setIsSubmitting(false);
 
@@ -231,6 +234,28 @@ export default function EditWalletModal({ isOpen, onClose, wallet, onDeleteSucce
               className="w-full px-4 py-3 rounded-2xl bg-[#F4F2FA] border border-[#ECE8F6] focus:border-[#6633EE] focus:bg-white text-sm font-semibold text-[#1E1B2E] outline-none transition-all"
               required
             />
+          </div>
+
+          {/* Saldo Saat Ini (Langsung Ubah Saldo) */}
+          <div>
+            <label className="block text-xs font-bold text-[#1E1B2E] mb-1.5">
+              Saldo Saat Ini (Rp)
+            </label>
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 pl-4 flex items-center text-sm font-black text-[#7E7A9B] pointer-events-none">
+                Rp
+              </span>
+              <input
+                type="number"
+                value={balance}
+                onChange={e => setBalance(e.target.value)}
+                placeholder="0"
+                className="w-full pl-11 pr-4 py-3 rounded-2xl bg-[#F4F2FA] border border-[#ECE8F6] focus:border-[#6633EE] focus:bg-white text-base font-black text-[#1E1B2E] outline-none transition-all"
+              />
+            </div>
+            <p className="text-[11px] text-[#7E7A9B] mt-1 font-medium">
+              Kamu bisa mengubah atau menetapkan saldo awal kartu ini secara langsung.
+            </p>
           </div>
 
           {/* Ganti Foto / Logo */}

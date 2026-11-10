@@ -3,7 +3,7 @@ import { Plus, Wallet } from 'lucide-react';
 import { useFinance } from '../context/FinanceContext';
 import SplitPaymentCard from '../components/common/SplitPaymentCard';
 
-export default function WalletsPage({ onSelectWallet, onOpenNewWallet, onEditWallet }) {
+export default function WalletsPage({ onSelectWallet, onOpenNewWallet, onEditWallet, onTopUpWallet }) {
   const { wallets } = useFinance();
   const walletList = wallets || [];
 
@@ -40,6 +40,7 @@ export default function WalletsPage({ onSelectWallet, onOpenNewWallet, onEditWal
               wallet={wallet}
               onClick={() => onSelectWallet && onSelectWallet(wallet)}
               onEdit={onEditWallet}
+              onTopUp={onTopUpWallet}
             />
           ))}
         </div>

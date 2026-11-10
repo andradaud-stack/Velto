@@ -4,13 +4,14 @@ import { formatRupiah } from '../core/utils/currencyFormatter';
 import BankJagoHeroCard from '../components/common/BankJagoHeroCard';
 import ActionCircleButton from '../components/common/ActionCircleButton';
 import PaymentTrackerTimeline from '../components/common/PaymentTrackerTimeline';
-import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, PlusCircle, ArrowRight } from 'lucide-react';
 
 export default function OverviewPage({ 
   onOpenNewWallet,
   onOpenEstimate,
   onOpenOptions,
-  onSelectWallet 
+  onSelectWallet,
+  onTopUpWallet
 }) {
   const { 
     wallets, 
@@ -97,7 +98,7 @@ export default function OverviewPage({
                   : 'animate-in fade-in slide-in-from-left-12 duration-300'
               }`}
             >
-              <BankJagoHeroCard wallet={currentWallet} />
+              <BankJagoHeroCard wallet={currentWallet} onTopUp={onTopUpWallet} />
             </div>
           </div>
         ) : (
@@ -134,6 +135,31 @@ export default function OverviewPage({
               title="Kantong berikutnya"
             >
               <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
+        {/* Quick Card Action Buttons: + Isi Saldo & Lihat Detail */}
+        {currentWallet && (
+          <div className="flex items-center gap-2 mt-3.5 justify-center">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onTopUpWallet && onTopUpWallet(currentWallet);
+              }}
+              className="flex-1 max-w-[210px] py-2.5 px-4 rounded-2xl bg-gradient-to-r from-[#6633EE] to-[#8054F6] hover:from-[#5727D8] hover:to-[#6F3FF0] text-white text-xs font-black flex items-center justify-center gap-2 shadow-[0_6px_16px_-3px_rgba(102,51,238,0.35)] active:scale-95 transition-all cursor-pointer"
+            >
+              <PlusCircle className="w-4 h-4 stroke-[2.5]" />
+              <span>+ Isi Saldo</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => onSelectWallet && onSelectWallet(currentWallet)}
+              className="py-2.5 px-4 rounded-2xl bg-white hover:bg-slate-50 border border-[#ECE8F6] text-xs font-bold text-[#1E1B2E] flex items-center gap-1.5 shadow-xs transition-all active:scale-95 cursor-pointer"
+            >
+              <span>Detail</span>
+              <ArrowRight className="w-3.5 h-3.5 text-[#7E7A9B]" />
             </button>
           </div>
         )}
