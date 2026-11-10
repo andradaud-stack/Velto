@@ -191,7 +191,7 @@ export default function BankJagoHeroCard({ wallet, onTopUp }) {
   return (
     <div 
       style={wallet.color && !theme.bgImage ? { backgroundColor: wallet.color } : {}}
-      className={`relative w-full rounded-[28px] overflow-hidden p-5 sm:p-6 text-white shadow-hero-card ${theme.bgImage ? '' : (!wallet.color ? `bg-gradient-to-tr ${theme.gradient}` : '')} transition-all duration-300 aspect-[1.586/1] min-h-[205px] flex flex-col justify-between select-none border border-black/10`}
+      className={`relative w-full rounded-[28px] overflow-hidden p-4 sm:p-5 text-white shadow-hero-card ${theme.bgImage ? '' : (!wallet.color ? `bg-gradient-to-tr ${theme.gradient}` : '')} transition-all duration-300 aspect-[1.586/1] min-h-[195px] flex flex-col justify-between select-none border border-black/10`}
     >
       {/* Background image if provided (e.g. Mandiri Batik Wayang Card) */}
       {theme.bgImage && (
@@ -249,18 +249,18 @@ export default function BankJagoHeroCard({ wallet, onTopUp }) {
         </div>
       ) : (
         /* Top spacer for Mandiri Wayang card to keep layout aligned */
-        <div className="relative z-10 h-10" />
+        <div className="relative z-10 h-8" />
       )}
 
       {/* Subtitle & Balance Display with + Isi Saldo button */}
-      <div className="relative z-10 mt-auto pt-2">
-        {!isMandiriCard && (
-          <p className="text-[10px] tracking-wider text-white/80 uppercase font-bold">
+      <div className="relative z-10 mt-auto pt-1">
+        {!isMandiriCard && theme.cardLabel && (
+          <p className="text-[9px] tracking-wider text-white/80 uppercase font-bold truncate mb-0.5">
             {theme.cardLabel}
           </p>
         )}
-        <div className="flex items-baseline justify-between gap-2">
-          <span className="text-2xl sm:text-3xl font-black tracking-tight drop-shadow-md text-white">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-xl sm:text-2xl font-black tracking-tight drop-shadow-md text-white whitespace-nowrap">
             {formatRupiah(wallet.balance)}
           </span>
           {onTopUp && (
@@ -270,7 +270,7 @@ export default function BankJagoHeroCard({ wallet, onTopUp }) {
                 e.stopPropagation();
                 onTopUp(wallet);
               }}
-              className="px-3 py-1.5 rounded-xl bg-white/20 hover:bg-white/35 backdrop-blur-md text-white text-xs font-black flex items-center gap-1.5 border border-white/20 active:scale-95 transition-all shadow-xs cursor-pointer"
+              className="px-2.5 py-1 rounded-xl bg-white/20 hover:bg-white/35 backdrop-blur-md text-white text-[11px] font-extrabold flex items-center gap-1 border border-white/25 active:scale-95 transition-all shadow-xs cursor-pointer shrink-0"
               title="Isi Saldo Kantong Ini"
             >
               <Plus className="w-3.5 h-3.5 stroke-[3]" />
@@ -281,9 +281,9 @@ export default function BankJagoHeroCard({ wallet, onTopUp }) {
       </div>
 
       {/* Card Number Masked & Copy */}
-      <div className="relative z-10 mt-2 flex items-center justify-between pt-2 border-t border-white/20">
-        <div className="flex items-center gap-2">
-          <span className="font-mono text-sm tracking-widest text-white font-semibold drop-shadow-sm">
+      <div className="relative z-10 mt-1.5 flex items-center justify-between pt-1.5 border-t border-white/20">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className="font-mono text-xs sm:text-sm tracking-wider sm:tracking-widest text-white font-semibold drop-shadow-sm truncate">
             {showNumber ? theme.fullNumber : theme.number}
           </span>
           <button 
@@ -291,31 +291,31 @@ export default function BankJagoHeroCard({ wallet, onTopUp }) {
               e.stopPropagation();
               setShowNumber(!showNumber);
             }}
-            className="p-1 rounded hover:bg-white/20 text-white/90 hover:text-white transition-colors"
+            className="p-1 rounded hover:bg-white/20 text-white/90 hover:text-white transition-colors shrink-0"
             title="Tampilkan detail"
           >
-            {showNumber ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+            {showNumber ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
           </button>
           <button 
             onClick={copyCardNumber}
-            className="p-1 rounded hover:bg-white/20 text-white/90 hover:text-white transition-colors"
+            className="p-1 rounded hover:bg-white/20 text-white/90 hover:text-white transition-colors shrink-0"
             title="Salin"
           >
-            {copied ? <Check className="w-3.5 h-3.5 text-emerald-300" /> : <Copy className="w-3.5 h-3.5" />}
+            {copied ? <Check className="w-3 h-3 text-emerald-300" /> : <Copy className="w-3 h-3" />}
           </button>
         </div>
 
-        <div className="text-right">
-          <span className="text-[9px] text-white/70 uppercase block font-medium">Valid Thru</span>
-          <span className="text-xs font-bold tracking-wider text-white">{theme.exp}</span>
+        <div className="text-right shrink-0 pl-2">
+          <span className="text-[8px] text-white/70 uppercase block font-medium leading-none">Valid Thru</span>
+          <span className="text-[11px] font-bold tracking-wider text-white leading-tight">{theme.exp}</span>
         </div>
       </div>
 
-      {/* Card Holder Name & Terintegrasi - Diberi spacing simetris dan pas tidak mepet atas/bawah */}
-      <div className="relative z-10 mt-1 flex items-center justify-between text-[11px] text-white/95">
-        <span className="font-bold tracking-wider uppercase drop-shadow-sm">{holderNameDisplay}</span>
-        <span className="text-[10px] text-white/85 flex items-center gap-1 font-semibold">
-          <ShieldCheck className="w-3.5 h-3.5 text-emerald-300" /> Terintegrasi
+      {/* Card Holder Name & Terintegrasi */}
+      <div className="relative z-10 mt-1 flex items-center justify-between text-[10px] sm:text-[11px] text-white/95">
+        <span className="font-bold tracking-wider uppercase drop-shadow-sm truncate pr-2">{holderNameDisplay}</span>
+        <span className="text-[9px] sm:text-[10px] text-white/85 flex items-center gap-1 font-semibold shrink-0">
+          <ShieldCheck className="w-3 h-3 text-emerald-300" /> Terintegrasi
         </span>
       </div>
     </div>
