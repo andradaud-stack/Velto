@@ -1,12 +1,10 @@
 import { test, expect } from '@playwright/test';
+import { seedAuthSession } from './helpers.js';
 
 test.describe('4. Transactions Mutasi & CRUD Flow', () => {
   test.beforeEach(async ({ page }) => {
+    await seedAuthSession(page);
     await page.goto('/');
-    const offlineBtn = page.getByRole('button', { name: /Buka Langsung Mode Offline/i });
-    if (await offlineBtn.isVisible()) {
-      await offlineBtn.click();
-    }
     await page.waitForTimeout(500);
 
     // Navigate to Mutasi using visible navigation button

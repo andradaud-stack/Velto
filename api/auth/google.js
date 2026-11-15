@@ -38,7 +38,7 @@ export default async function handler(req, res) {
         });
         payload = ticket.getPayload();
       } catch (tokenErr) {
-        const verifyRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`);
+        const verifyRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`);
         if (!verifyRes.ok) {
           throw new Error('Google token verification failed');
         }
@@ -138,7 +138,23 @@ export default async function handler(req, res) {
       }
     });
   } catch (error) {
-    console.error('[Google Auth Error]', error?.message || 'Unknown auth error');
-    return res.status(500).json({ error: 'Autentikasi Google gagal. Silakan coba kembali.' });
+    const errorMsg = error?.message || 'Unknown auth error';
+    console.error('[Google Auth Error]', errorMsg);
+
+    if (errorMsg.includes('credentials missing') || errorMsg.includes('TIDB_PASSWORD')) {
+      return res.status(500).json({ 
+        error: 'Database TiDB belum terhubung: Harap setel TIDB_PASSWORD di Vercel Environment Variables.' 
+      });
+    }
+
+    if (errorMsg.includes('verification failed') || errorMsg.includes('Invalid user payload')) {
+      return res.status(401).json({ 
+        error: 'Verifikasi Google gagal. Pastikan Brave Shields tidak memblokir cookie autentikasi.' 
+      });
+    }
+
+    return res.status(500).json({ 
+      error: `Autentikasi gagal: ${errorMsg}` 
+    });
   }
 }

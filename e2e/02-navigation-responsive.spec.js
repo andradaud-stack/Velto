@@ -1,13 +1,10 @@
 import { test, expect } from '@playwright/test';
+import { seedAuthSession } from './helpers.js';
 
 test.describe('2. Navigation & Responsive Layout Transitions', () => {
   test.beforeEach(async ({ page }) => {
-    // Start session in offline mode
+    await seedAuthSession(page);
     await page.goto('/');
-    const offlineBtn = page.getByRole('button', { name: /Buka Langsung Mode Offline/i });
-    if (await offlineBtn.isVisible()) {
-      await offlineBtn.click();
-    }
     await page.waitForTimeout(500);
   });
 

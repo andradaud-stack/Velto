@@ -15,34 +15,45 @@ test.describe('1. Authentication, Session & Logout Flow', () => {
     });
   });
 
-  test('should display login page with branding and offline access button', async ({ page }) => {
+  test('should display login page with branding and login form', async ({ page }) => {
     await page.goto('/');
 
     // Check title / brand
     await expect(page).toHaveTitle(/Velto/i);
 
-    // Check offline login button exists
-    const offlineBtn = page.getByRole('button', { name: /Buka Langsung Mode Offline/i });
-    await expect(offlineBtn).toBeVisible();
+    // Verify form elements exist
+    await expect(page.getByPlaceholder(/Email Address/i)).toBeVisible();
+    await expect(page.getByPlaceholder(/Password/i)).toBeVisible();
+    await expect(page.getByRole('button', { name: /Login/i })).toBeVisible();
 
     // Verify no blank white screen
     const rootHtml = await page.locator('#root').innerHTML();
     expect(rootHtml.length).toBeGreaterThan(100);
   });
 
-  test('should login via offline mode, persist session on reload, and logout successfully', async ({ page }) => {
+  test('should login via session persistence, survive reload, and logout successfully', async ({ page }) => {
+    // Seed authenticated session
+    await page.addInitScript(() => {
+      localStorage.setItem('velto_cloud_session', JSON.stringify({
+        token: 'e2e_test_token',
+        user: {
+          id: 'owner_andra',
+          email: 'andrasyahdand@gmail.com',
+          name: 'Andra Syahdan Daud',
+          role: 'owner'
+        }
+      }));
+    });
+
     await page.goto('/');
 
-    // Click offline direct button
-    const offlineBtn = page.getByRole('button', { name: /Buka Langsung Mode Offline/i });
-    await offlineBtn.click();
-
     // Verify navigation into the application
-    await expect(page.getByRole('button', { name: /Buka Langsung Mode Offline/i })).not.toBeVisible();
+    await expect(page.getByRole('button', { name: /Login/i })).not.toBeVisible();
+    await expect(page.locator('#root')).toBeVisible();
 
     // Verify session persistence after browser reload (Requirement 13)
     await page.reload();
-    await expect(page.getByRole('button', { name: /Buka Langsung Mode Offline/i })).not.toBeVisible();
+    await expect(page.getByRole('button', { name: /Login/i })).not.toBeVisible();
 
     // Handle logout confirmation dialog automatically
     page.on('dialog', (dialog) => dialog.accept());
@@ -58,6 +69,6 @@ test.describe('1. Authentication, Session & Logout Flow', () => {
     await logoutBtn.click();
 
     // Verify returned to LoginPage
-    await expect(page.getByRole('button', { name: /Buka Langsung Mode Offline/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Login/i })).toBeVisible();
   });
 });

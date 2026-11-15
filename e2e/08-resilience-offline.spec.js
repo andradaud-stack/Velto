@@ -1,7 +1,10 @@
 import { test, expect } from '@playwright/test';
+import { seedAuthSession } from './helpers.js';
 
 test.describe('8. Resilience & Offline Error Handling Flow', () => {
   test('should gracefully handle failed cloud API sync without blanking out UI', async ({ page }) => {
+    await seedAuthSession(page);
+
     // Intercept /api/sync and force HTTP 500 error
     await page.route('**/api/sync', (route) => {
       route.fulfill({
@@ -12,15 +15,9 @@ test.describe('8. Resilience & Offline Error Handling Flow', () => {
     });
 
     await page.goto('/');
-
-    const offlineBtn = page.getByRole('button', { name: /Buka Langsung Mode Offline/i });
-    if (await offlineBtn.isVisible()) {
-      await offlineBtn.click();
-    }
     await page.waitForTimeout(600);
 
     // App should still load local Dexie data seamlessly and stay authenticated offline
-    await expect(page.getByRole('button', { name: /Buka Langsung Mode Offline/i })).not.toBeVisible();
     await expect(page.locator('#root')).toBeVisible();
 
     // Verify ErrorBoundary didn't crash into white screen
@@ -30,11 +27,8 @@ test.describe('8. Resilience & Offline Error Handling Flow', () => {
   });
 
   test('should display meaningful fallback instead of white screen on severe component error', async ({ page }) => {
+    await seedAuthSession(page);
     await page.goto('/');
-    const offlineBtn = page.getByRole('button', { name: /Buka Langsung Mode Offline/i });
-    if (await offlineBtn.isVisible()) {
-      await offlineBtn.click();
-    }
     await page.waitForTimeout(400);
 
     // Verify the error boundary fallback structure is compiled and functional

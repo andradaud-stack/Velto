@@ -18,6 +18,7 @@ export default function LoginPage({ onLoginSuccess }) {
   const [rememberMe, setRememberMe] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGsiRendered, setIsGsiRendered] = useState(false);
+  const [isBrave, setIsBrave] = useState(false);
 
   const googleBtnRef = useRef(null);
 
@@ -25,9 +26,17 @@ export default function LoginPage({ onLoginSuccess }) {
     loginWithEmail, 
     registerWithEmail, 
     loginWithGoogle, 
-    handleGoogleAuthResponse, 
-    loginOfflineDirect 
+    handleGoogleAuthResponse 
   } = useAuth();
+
+  // Detect Brave browser to provide optimal auth options against Brave Shields
+  useEffect(() => {
+    if (window.navigator?.brave?.isBrave) {
+      window.navigator.brave.isBrave().then((res) => {
+        if (res) setIsBrave(true);
+      }).catch(() => {});
+    }
+  }, []);
 
   // Mount Google Identity Services Button for native mobile & desktop support
   useEffect(() => {
@@ -120,11 +129,6 @@ export default function LoginPage({ onLoginSuccess }) {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleOfflineDirect = () => {
-    loginOfflineDirect();
-    onLoginSuccess?.();
   };
 
   return (
@@ -293,21 +297,21 @@ export default function LoginPage({ onLoginSuccess }) {
           </div>
 
           {/* Social OAuth Icons (Google Sign-In) */}
-          <div className="flex flex-col items-center justify-center relative z-10">
+          <div className="flex flex-col items-center justify-center relative z-10 space-y-2">
             {/* Native Official Google GSI Button (Ultra reliable on Mobile & Desktop) */}
             <div 
               ref={googleBtnRef} 
               className={`flex justify-center w-full min-h-[40px] ${!isGsiRendered ? 'hidden' : ''}`}
             />
 
-            {/* Fallback button shown only until Google SDK renders */}
-            {!isGsiRendered && (
+            {/* Fallback / Brave Shields alternative popup button */}
+            {(!isGsiRendered || isBrave) && (
               <button
                 type="button"
                 onClick={handleGoogleAuth}
                 disabled={isSubmitting}
                 className="w-full max-w-[280px] py-2.5 px-4 rounded-full border border-[#E2E8F0] hover:border-slate-300 bg-white hover:bg-slate-50 flex items-center justify-center gap-2.5 shadow-xs active:scale-95 transition-all text-xs font-bold text-[#0B1536] cursor-pointer"
-                title="Masuk dengan Google"
+                title="Masuk dengan Google (Popup)"
               >
                 <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -315,8 +319,14 @@ export default function LoginPage({ onLoginSuccess }) {
                   <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
                   <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
                 </svg>
-                <span>Google Account</span>
+                <span>{isBrave ? 'Google via Popup (Brave Mode)' : 'Google Account'}</span>
               </button>
+            )}
+
+            {isBrave && (
+              <p className="text-[10px] text-[#64748B] text-center max-w-[280px] leading-tight">
+                Tips Brave: Jika tombol di atas tertahan, klik ikon singa 🦁 di baris URL lalu izinkan pelacak untuk login.
+              </p>
             )}
           </div>
 
@@ -335,17 +345,6 @@ export default function LoginPage({ onLoginSuccess }) {
             >
               <span>{isRegisterMode ? 'Log in' : 'Sign up'}</span>
               <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          {/* Direct Offline Access Link */}
-          <div className="mt-3 pt-2.5 border-t border-slate-100 text-center relative z-10">
-            <button
-              type="button"
-              onClick={handleOfflineDirect}
-              className="text-[11px] font-semibold text-[#94A3B8] hover:text-[#0B1536] transition-colors cursor-pointer"
-            >
-              Buka Langsung Mode Offline (Tanpa Akun) &rarr;
             </button>
           </div>
 
