@@ -95,6 +95,9 @@ export default async function handler(req, res) {
     });
   } catch (err) {
     console.error('[Login API Error]', err?.message || 'Login failed');
-    return res.status(500).json({ error: 'Proses autentikasi gagal. Silakan periksa kembali data Anda.' });
+    return res.status(500).json({ 
+      error: 'Proses autentikasi gagal. Silakan periksa kembali data Anda.',
+      details: err?.message || String(err)
+    });
   }
 }
