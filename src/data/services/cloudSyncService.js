@@ -48,9 +48,29 @@ class CloudSyncService {
 
       const { wallets, transactions, goals, parfumBatches, parfumSales, settings } = json.data;
 
-      // Update Dexie database tables for current user
+      // Update Dexie database tables for current user with smart non-zero protection
       if (wallets && wallets.length > 0) {
-        await db.wallets.bulkPut(wallets);
+        const localWallets = await db.wallets.toArray();
+        const localMap = {};
+        localWallets.forEach(w => { localMap[w.id] = w; });
+
+        let shouldPushLocalToCloud = false;
+
+        const mergedWallets = wallets.map(cw => {
+          const lw = localMap[cw.id];
+          // Jika lokal memiliki saldo > 0 sedangkan cloud bernilai 0, pertahankan saldo lokal
+          if (lw && Number(lw.balance || 0) > 0 && Number(cw.balance || 0) === 0) {
+            shouldPushLocalToCloud = true;
+            return lw;
+          }
+          return cw;
+        });
+
+        await db.wallets.bulkPut(mergedWallets);
+
+        if (shouldPushLocalToCloud) {
+          this.syncLocalToCloud().catch(console.warn);
+        }
       }
 
       if (transactions) {
